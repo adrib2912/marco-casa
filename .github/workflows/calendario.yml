@@ -1,0 +1,24 @@
+# Copia los calendarios a Supabase cada 15 minutos (y a mano desde la pestaña Actions).
+# Los cron de GitHub a veces se retrasan; si hace falta, se puede lanzar también desde cron-job.org
+# con la API de GitHub (workflow_dispatch), como en las apps del equipo.
+name: Calendario
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+concurrency: calendario
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install icalendar recurring-ical-events
+      - run: python scripts/calendario.py
+        env:
+          CALENDARIOS: ${{ secrets.CALENDARIOS }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
