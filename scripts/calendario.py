@@ -10,6 +10,7 @@ por eso va en los secretos y nunca en el repo.
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
@@ -61,8 +62,29 @@ def eventos(ics, key, desde, hasta):
     return out
 
 
+def secreto(nombre):
+    v = os.environ.get(nombre, "").strip()
+    if not v:
+        sys.exit(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
+    return v
+
+
+def guardar(url, cuerpo, clave):
+    """PATCH a Supabase. Las claves nuevas (sb_secret_...) van solo en la cabecera apikey."""
+    req = urllib.request.Request(url, data=cuerpo, method="PATCH", headers={
+        "apikey": clave, "Content-Type": "application/json", "Prefer": "return=minimal"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        sys.exit(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
+
+
 def main():
-    cals = json.loads(os.environ["CALENDARIOS"])
+    try:
+        cals = json.loads(secreto("CALENDARIOS"))
+    except json.JSONDecodeError as e:
+        sys.exit(f"El secreto CALENDARIOS no es un texto válido (revisa comillas y corchetes): {e.msg}")
     hoy = datetime.now(ZONA).date()
     desde, hasta = hoy - timedelta(days=ANTES), hoy + timedelta(days=DESPUES)
     todos, vistos, fallos = [], set(), []
@@ -81,12 +103,8 @@ def main():
         sys.exit("Ningún calendario se ha podido leer; no toco lo que ya hay en Supabase")
     todos.sort(key=lambda e: e["start"])
     cuerpo = json.dumps({"eventos": todos, "actualizado": datetime.now(ZONA).isoformat()}).encode()
-    url = os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/calendario?id=eq.1"
-    clave = os.environ["SUPABASE_SERVICE_KEY"]
-    req = urllib.request.Request(url, data=cuerpo, method="PATCH", headers={
-        "apikey": clave, "Authorization": "Bearer " + clave, "Content-Type": "application/json", "Prefer": "return=minimal"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        print("Supabase:", r.status, "·", len(todos), "eventos guardados")
+    url = secreto("SUPABASE_URL").rstrip("/") + "/rest/v1/calendario?id=eq.1"
+    print("Supabase:", guardar(url, cuerpo, secreto("SUPABASE_SERVICE_KEY")), "·", len(todos), "eventos guardados")
 
 
 if __name__ == "__main__":

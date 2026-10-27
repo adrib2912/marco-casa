@@ -7,6 +7,7 @@ Guarda [{"t": "2026-10-27T13:00", "p": 0.1234}, ...] con p en €/kWh y la hora 
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -41,19 +42,37 @@ def precios(doc):
     return [{"t": k, "p": round(sum(vs) / len(vs) / 1000, 4)} for k, vs in sorted(horas.items())]
 
 
+def secreto(nombre):
+    v = os.environ.get(nombre, "").strip()
+    if not v:
+        sys.exit(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
+    return v
+
+
+def guardar(url, cuerpo, clave):
+    """PATCH a Supabase. Las claves nuevas (sb_secret_...) van solo en la cabecera apikey."""
+    req = urllib.request.Request(url, data=cuerpo, method="PATCH", headers={
+        "apikey": clave, "Content-Type": "application/json", "Prefer": "return=minimal"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.status
+    except urllib.error.HTTPError as e:
+        sys.exit(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
+
+
 def main():
     hoy = datetime.now(ZONA).date()
     url = f"{API}?start_date={hoy}T00:00&end_date={hoy + timedelta(days=1)}T23:59&time_trunc=hour"
-    horas = precios(bajar(url))
+    try:
+        doc = bajar(url)
+    except Exception as e:
+        sys.exit(f"Red Eléctrica no responde ({type(e).__name__}: {e})")
+    horas = precios(doc)
     if not horas:
         sys.exit("Sin precios; no toco lo que hay en Supabase")
     cuerpo = json.dumps({"horas": horas, "actualizado": datetime.now(ZONA).isoformat()}).encode()
-    clave = os.environ["SUPABASE_SERVICE_KEY"]
-    req = urllib.request.Request(os.environ["SUPABASE_URL"].rstrip("/") + "/rest/v1/luz?id=eq.1", data=cuerpo, method="PATCH",
-                                 headers={"apikey": clave, "Authorization": "Bearer " + clave,
-                                          "Content-Type": "application/json", "Prefer": "return=minimal"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        print("Supabase:", r.status, "·", len(horas), "horas,", horas[0]["t"], "a", horas[-1]["t"])
+    url = secreto("SUPABASE_URL").rstrip("/") + "/rest/v1/luz?id=eq.1"
+    print("Supabase:", guardar(url, cuerpo, secreto("SUPABASE_SERVICE_KEY")), "·", len(horas), "horas,", horas[0]["t"], "a", horas[-1]["t"])
 
 
 if __name__ == "__main__":
