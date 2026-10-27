@@ -39,12 +39,20 @@ create table if not exists calendario (   -- una sola fila; la rellena la Action
 );
 insert into calendario (id) values (1) on conflict do nothing;
 
+create table if not exists luz (          -- precio PVPC por horas; lo rellena la Action
+  id int primary key default 1 check (id = 1),
+  horas jsonb not null default '[]',
+  actualizado timestamptz
+);
+insert into luz (id) values (1) on conflict do nothing;
+
 -- permisos: todo cerrado salvo para usuarios con sesión
 alter table tareas enable row level security;
 alter table compra enable row level security;
 alter table habituales enable row level security;
 alter table fotos enable row level security;
 alter table calendario enable row level security;
+alter table luz enable row level security;
 
 do $$
 declare t text;
@@ -56,6 +64,8 @@ begin
 end $$;
 drop policy if exists "casa lee" on calendario;
 create policy "casa lee" on calendario for select to authenticated using (true);   -- escribir: solo la Action
+drop policy if exists "casa lee" on luz;
+create policy "casa lee" on luz for select to authenticated using (true);
 
 -- lo que se compra a menudo, para empezar
 insert into habituales (nombre, orden) values

@@ -1,0 +1,20 @@
+# Precio de la luz (PVPC) a Supabase cada hora; los de mañana aparecen a partir de las 20:15.
+name: Luz
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+concurrency: luz
+jobs:
+  luz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/luz.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

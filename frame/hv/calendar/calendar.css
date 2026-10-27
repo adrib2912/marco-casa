@@ -68,3 +68,4 @@
 .cl-sd.plain{color:var(--ink-2);padding:2vh 1.4vw;align-items:center}
 .cl-sd.plain:after{display:none}
 .cl-sd.plain div{padding:0}
+.cl-ds{margin:.8vh 0 0;font-size:2.4vh;line-height:1.35;color:var(--ink-2);white-space:pre-line;max-height:14vh;overflow:hidden}

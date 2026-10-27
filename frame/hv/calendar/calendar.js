@@ -107,7 +107,7 @@
     var ev='';
     for(i=0;i<es.length;i++){var x=es[i],e=x.e,when=e.all_day?'Todo el día':st(x.s)+(e.end?' – '+st(new Date(e.end)):'');
       if(x.b>x.a&&e.all_day)when='Todo el día · hasta el '+fromNum(x.b).d+' de '+MON[fromNum(x.b).mo-1];
-      ev+='<div class="cl-ev"><i style="background:'+((CAL[e.cal]||FALLBACK).c)+'"></i><div><b>'+esc(e.title)+'</b><span>'+esc(when+(e.location?' · '+String(e.location).split('\n')[0]:'')+' · '+(CAL[e.cal]||FALLBACK).n)+'</span></div></div>';}
+      ev+='<div class="cl-ev"><i style="background:'+((CAL[e.cal]||FALLBACK).c)+'"></i><div><b>'+esc(e.title)+'</b><span>'+esc(when+(e.location?' · '+String(e.location).split('\n')[0]:'')+' · '+(CAL[e.cal]||FALLBACK).n)+'</span>'+(e.description?'<p class="cl-ds">'+esc(e.description)+'</p>':'')+'</div></div>';}
     if(!ev)ev='<div class="hv-empty">Nada previsto. Día libre.</div>';
     var dn='';
     if(nm){var th=m&&m.thumb;
@@ -137,8 +137,8 @@
   draw();
   function loadF(){HVJson('/api/frame').then(function(d){D.frame=d;draw();},function(){});}
   function loadK(){HVJson('/api/meals/plan').then(function(d){if(d&&d.ok!==false){D.plan=d;draw();}},function(){});}
-  var qo=location.search.match(/[?&]open=(\d+)/);   // preview: open the agenda sheet for today + N
-  if(qo)setTimeout(function(){openDay(todayN()+(+qo[1]));},1500);
-  loadF();loadK();setInterval(loadF,30000);setInterval(loadK,60000);
+  var qo=location.search.match(/[?&]open=(\d+)/);   // desde el inicio: abre el día de hoy + N con sus detalles
+  HVJson('/api/frame').then(function(d){D.frame=d;draw();if(qo)openDay(todayN()+(+qo[1]));},function(){});
+  setInterval(loadF,30000);
   setInterval(draw,60000);
 })();

@@ -153,6 +153,36 @@
     return Promise.all(jobs).then(function(){out.calendars.forEach(function(m){out.sources[m.key]=m.status;});return out;});
   }
 
+  /* ---------- precio de la luz (PVPC): lo deja la Action en la tabla "luz" ---------- */
+  function band(p,sorted){   // tercios del día: barata, normal, cara
+    var a=sorted[Math.floor(sorted.length/3)],b=sorted[Math.floor(sorted.length*2/3)];
+    return p<=a?'barata':p<b?'normal':'cara';
+  }
+  function bestWindow(hours,n){   // las n horas seguidas más baratas
+    var best=null,i,j,s;
+    for(i=0;i+n<=hours.length;i++){
+      for(s=0,j=i;j<i+n;j++){if(j>i&&mins(hours[j].t)-mins(hours[j-1].t)!==60){s=null;break;}s+=hours[j].p;}
+      if(s!=null&&(!best||s<best.sum))best={from:hours[i].t,to:hours[i+n-1].t,sum:s,avg:s/n};
+    }
+    return best;
+  }
+  function luzDoc(){
+    var c=get('mc-luz');
+    var load=c&&nowS()-c.t<900?Promise.resolve(c.d):rest('GET','luz?select=horas,actualizado&id=eq.1').then(function(rows){
+      var d=(rows&&rows[0])||{horas:[],actualizado:null};put('mc-luz',{t:nowS(),d:d});return d;},function(e){if(c)return c.d;throw e;});
+    return load.then(function(d){
+      var now=local(),hk=now.slice(0,13)+':00',today=now.slice(0,10),all=d.horas||[];
+      var todays=all.filter(function(h){return h.t.slice(0,10)===today;}),sorted=todays.map(function(h){return h.p;}).sort(function(a,b){return a-b;});
+      var cur=null,ahead=all.filter(function(h){return h.t>=hk;});
+      all.forEach(function(h){h.band=sorted.length?band(h.p,sorted):'normal';if(h.t===hk)cur=h;});
+      return {ok:true,updated:d.actualizado,now:cur,hours:all,today:todays,
+        min:sorted.length?sorted[0]:null,max:sorted.length?sorted[sorted.length-1]:null,
+        avg:sorted.length?sorted.reduce(function(a,b){return a+b;},0)/sorted.length:null,
+        best2:bestWindow(ahead,2),best3:bestWindow(ahead,3),
+        tomorrow:all.some(function(h){return h.t.slice(0,10)>today;})};
+    });
+  }
+
   /* ---------- tareas ---------- */
   function tasksDoc(){
     return rest('GET','tareas?select=id,titulo,quien,hecha,creada&order=creada.asc').then(function(rows){
@@ -259,6 +289,7 @@
   function route(path,method,body){
     var p=body||{};
     if(path==='/api/frame')return frameDoc();
+    if(path==='/api/luz')return luzDoc();
     if(path==='/api/tasks')return method==='POST'?tasksChange(p):tasksDoc();
     if(path==='/api/meals/shopping')return method==='POST'?shopChange(p):shopDoc();
     if(path==='/api/meals/staples')return method==='POST'?staplesChange(p):staplesDoc();

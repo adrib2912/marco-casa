@@ -21,6 +21,7 @@
     plus:'<path d="M12 5v14M5 12h14"/>',
     drop:'<path d="M12 3.5c3 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.5-6 5.5-10z"/>',
     check:'<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.5l3 3 5-6"/>',
+    bolt:'<path d="M13 2.5L4.5 13.5H11L10 21.5L19.5 10H13z"/>',
     sunrise:'<path d="M5 18a7 7 0 0 1 14 0M3 21h18M12 4v4M9.5 6.5L12 4l2.5 2.5M4.6 11.6l1.4 1.4M19.4 11.6L18 13"/>'
   };
   function ic(n){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">'+I[n]+'</svg>';}
@@ -57,7 +58,7 @@
       rows+='<div class="ev"><i style="background:'+HV.calColor(e.cal)+'"></i><span>'+HV.esc(e.title)+'</span>'+em+'</div>';
     });
     var left=tod.length-3;
-    return w('today s2','/marco-casa/frame/hv/calendar/','Hoy'+(left>0?'<span class="more">+'+left+' más</span>':''),'cal','<div class="evs">'+rows+'</div>');
+    return w('today s2','/marco-casa/frame/hv/calendar/?open=0','Hoy'+(left>0?'<span class="more">+'+left+' más</span>':''),'cal','<div class="evs">'+rows+'</div>');
   }
 
   function tomorrowTile(){
@@ -76,7 +77,7 @@
     });
     if(!cal)cal='<div class="none">'+ic('cal')+'<span>Nada en el calendario</span></div>';
     var left=evs.length-3;
-    return w('tmr s2','/marco-casa/frame/hv/calendar/','Mañana · '+HV.DAYS[t.dow]+(left>0?'<span class="more">+'+left+' más</span>':''),'sun',
+    return w('tmr s2','/marco-casa/frame/hv/calendar/?open=1','Mañana · '+HV.DAYS[t.dow]+(left>0?'<span class="more">+'+left+' más</span>':''),'sun',
       '<div class="tcols"><div class="tds">'+wxs+'</div><div class="tcal">'+cal+'</div></div>');   // same dark card as Today
   }
 
@@ -131,6 +132,18 @@
     return w(left?'on':'','/marco-casa/frame/hv/shopping/','Compra','cart',body);
   }
 
+  // Luz: el precio de ahora (barata, normal o cara respecto al día) y las dos horas seguidas más baratas que quedan
+  function eur(p){return (Math.round(p*100)/100).toFixed(2).replace('.',',')+' €';}
+  function hh(t){return (+t.slice(11,13))+':00';}
+  function luzTile(){
+    var L=d.luz,n=L&&L.now,b=L&&L.best2,word={barata:'Barata ahora',normal:'Precio normal',cara:'Cara ahora'};
+    if(!n)return w('luz','/marco-casa/frame/hv/luz/','Luz','bolt','<div class="line">'+(L?'Sin precios todavía':'Cargando')+'</div>');
+    var fin=b?(+b.to.slice(11,13)+1)%24+':00':'';
+    return w('luz l-'+n.band,'/marco-casa/frame/hv/luz/','Luz','bolt',
+      '<div><div class="big">'+eur(n.p).replace(' €','<small> €/kWh</small>')+'</div><div class="lz-b">'+word[n.band]+'</div></div>'+
+      (b?'<div class="line muted">Lo más barato: '+hh(b.from)+'–'+fin+(b.from.slice(0,10)!==L.today[0].t.slice(0,10)?' (mañana)':'')+'</div>':''));
+  }
+
   // Tareas: cuántas quedan y las tres primeras (con quién, si se ha dicho)
   function tasksTile(){
     var T=d.tasks,left=T?T.left:null,body;
@@ -152,7 +165,7 @@
       // backpack stickers next to the day name: what the backpack rules find in that day's calendar (up to 3)
       var bp='',seen={};on.forEach(function(e){if(HV.isHoliday(e.cal))return;var r=HV.packHit(e.title);if(!r||seen[r.item]||bp.split('<i').length>3)return;seen[r.item]=1;
         bp+='<i style="background:'+(HV.PACK_COLOR[r.icon]||'#8e8e93')+'">'+HV.packIcon(r.icon,'#fff')+'</i>';});
-      h+='<div class="d" data-href="/marco-casa/frame/hv/calendar/"><div class="dn"><span>'+dn+'</span>'+(bp?'<span class="bp">'+bp+'</span>':'')+'<b>'+(+k.slice(8,10))+'</b></div>';
+      h+='<div class="d" data-href="/marco-casa/frame/hv/calendar/?open='+j+'"><div class="dn"><span>'+dn+'</span>'+(bp?'<span class="bp">'+bp+'</span>':'')+'<b>'+(+k.slice(8,10))+'</b></div>';
       // room for 2 event lines above a dinner (3 without one); past that, the last line is "+N more"
       var room=meal?2:3,show=on.length>room?room-1:on.length;
       on.slice(0,show).forEach(function(e){h+='<div class="e"><i style="background:'+HV.calColor(e.cal)+'"></i><span>'+HV.esc(e.title)+'</span></div>';});
@@ -169,7 +182,7 @@
     HV.rainChip(wx&&wx.nowcast);                    // rain soon, left of the camera button
     document.getElementById('hello').textContent=h<6?'Buenas noches':h<14?'Buenos días':h<21?'Buenas tardes':'Buenas noches';
     drawDate();
-    var html=todayTile()+weatherTile(wx)+homeTile(wx);
+    var html=todayTile()+weatherTile(wx)+luzTile();
     html+=tasksTile();
     html+=w('timer',null,'Temporizador','timer','<div class="tb">'+timerBody()+'</div>');
     html+=shopTile();
@@ -195,6 +208,7 @@
     var jobs=[
       HVJson('/api/frame').then(function(x){d.frame=x;},function(){}),
       HVJson('/api/tasks').then(function(x){d.tasks=x;},function(){}),
+      HVJson('/api/luz').then(function(x){d.luz=x;},function(){}),
       HVJson('/api/meals/shopping').then(function(x){d.shop=x;},function(){}),
       HVJson('/api/frame/photos').then(function(x){d.photos=x;},function(){})
     ];

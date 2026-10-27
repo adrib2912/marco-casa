@@ -7,7 +7,7 @@ temporizadores y fotos en reposo. Todo en español y sin servidor propio:
 - **GitHub Pages** sirve las pantallas (`frame/hv/`).
 - **Supabase** (plan gratis) guarda tareas, compra y fotos, con inicio de sesión.
 - **Open-Meteo** da el tiempo directamente al navegador (gratis, sin clave).
-- Una **Action** copia el calendario de Google a Supabase cada 15 minutos.
+- Una **Action** copia el calendario de Google a Supabase cada 15 minutos, y otra el precio de la luz (PVPC, Red Eléctrica) cada hora.
 
 ## Puesta en marcha
 
@@ -32,6 +32,7 @@ frame/hv/config.js lo que se configura a mano
 frame/shared/datos.js  responde a las pantallas: Supabase, Open-Meteo y temporizadores
 supabase/esquema.sql   tablas, permisos y almacenamiento de fotos
 scripts/calendario.py  iCal → Supabase (lo ejecuta .github/workflows/calendario.yml)
+scripts/luz.py         PVPC de hoy y mañana → Supabase (.github/workflows/luz.yml)
 ```
 
 Licencia MIT, como el original.

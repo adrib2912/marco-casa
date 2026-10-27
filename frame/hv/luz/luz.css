@@ -1,0 +1,35 @@
+/* Precio de la luz. Verde barata, ámbar normal, rojo cara. */
+.lz{padding:9.5vh 3.4vw 8.6vh;gap:1.6vh}
+.sh .hv-title{font-size:6vh}.sh .hv-sub{font-size:2.8vh;margin-top:.6vh}
+.body{flex:1;min-height:0;display:flex;gap:1.4vw}
+.lz-main{flex:2 1 0;min-width:0;display:flex;flex-direction:column;padding:2vh 1.4vw 1.6vh}
+.rail{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:1.6vh}
+.lz-tabs{display:flex;gap:.6vw;margin-bottom:1.4vh}
+.lz-tabs button{height:6.4vh;padding:0 1.8vw;border-radius:999px;background:var(--bg);font-size:2.6vh;font-weight:600;color:var(--ink)}
+.lz-tabs button.on{background:var(--ink);color:#fff}
+.lz-tabs button[disabled]{opacity:.4}
+.lz-chart{flex:1;min-height:0;display:flex;align-items:stretch;gap:.3vw}
+.lz-c{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.lz-c em{font-style:normal;font-size:1.9vh;font-weight:600;color:var(--ink-2);white-space:nowrap;height:2.6vh}
+.lz-c i{display:block;width:100%;border-radius:.8vh .8vh .3vh .3vh}
+.lz-c small{font-size:2vh;font-weight:600;color:var(--ink-3);height:2.8vh;margin-top:.6vh}
+.lz-c.past i{opacity:.35}
+.lz-c.now em{color:var(--ink);font-weight:700}
+.lz-c.now small{color:var(--ink);font-weight:700}
+.lz-c.now i{box-shadow:0 0 0 .4vh var(--ink)}
+.b-barata{background:#34c759}.b-normal{background:#ffb340}.b-cara{background:#ff453a}
+.lz-key{display:flex;gap:1.6vw;align-items:center;margin-top:1.4vh;font-size:2.2vh;color:var(--ink-2);font-weight:600}
+.lz-key i{display:inline-block;width:1.8vh;height:1.8vh;border-radius:.5vh;margin-right:.5vw;vertical-align:-.2vh}
+.lz-key .src{margin-left:auto;color:var(--ink-3);font-weight:500}
+.lz-none{flex:1;display:flex;align-items:center;justify-content:center;font-size:3vh}
+.rail .hv-card{flex:none;display:block;padding:2vh 1.4vw}
+.lz-now .v{font-family:var(--sfr);font-size:7vh;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.lz-now .v small{font-size:2.4vh;font-weight:600;opacity:.7;letter-spacing:0}
+.lz-now .tag{display:inline-block;margin-top:.6vh;font-size:2.3vh;font-weight:700;padding:.4vh 1.2vh;border-radius:999px;background:rgba(0,0,0,.07)}
+.n-barata{background:#d9f4df;color:#0d3b1c}.n-normal{background:#fff1d6;color:#4a3000}.n-cara{background:#ffe0dc;color:#5c0f08}
+.lz-tip .r{display:flex;justify-content:space-between;align-items:baseline;gap:1vw;padding:1.2vh 0;border-top:1px solid var(--sep);font-size:2.6vh}
+.lz-tip h3+.r{border-top:0}
+.lz-tip .r span{font-weight:700;color:#1f7a3a;white-space:nowrap}
+.lz-sum .g{display:grid;grid-template-columns:repeat(3,1fr);gap:1vw;margin-top:.6vh}
+.lz-sum span{display:block;font-size:2.1vh;color:var(--ink-3);font-weight:600}
+.lz-sum b{font-size:3.2vh;font-family:var(--sfr)}

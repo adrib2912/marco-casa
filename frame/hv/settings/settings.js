@@ -47,7 +47,7 @@
   }
   /* every HomeView screen, named as its own title reads ('' is the Home launcher). Music only when Sonos or Spotify is set up, Camera only when a camera is. */
   var SCREENS=[
-    ['Inicio',''],['Calendario','calendar'],['Tiempo','weather'],['Tareas','tasks'],
+    ['Inicio',''],['Calendario','calendar'],['Tiempo','weather'],['Tareas','tasks'],['Luz','luz'],
     ['Compra','shopping'],['Temporizador','timer'],['Fotos','photos'],['Reposo','standby'],['Noche','night'],
     ['Fondo','background'],['Pantallas de reposo','faces']
   ].filter(function(x){return (x[1]!=='music'||HV.cfg.sonos||HV.cfg.spotify)&&(x[1]!=='camera'||HV.cfg.camera)&&(x[1]!=='ha'||HV.cfg.ha);});

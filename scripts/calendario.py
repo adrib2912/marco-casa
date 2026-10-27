@@ -34,6 +34,14 @@ def a_local(v):
     return datetime.combine(v, time.min, ZONA), True
 
 
+def limpiar(texto, n=300):
+    """La descripción del evento, sin HTML (Google la manda a veces con <br>) y recortada."""
+    import re
+    t = re.sub(r"<br\s*/?>", "\n", texto, flags=re.I)
+    t = re.sub(r"<[^>]+>", "", t).replace("&nbsp;", " ").strip()
+    return (t[:n].rstrip() + "…") if len(t) > n else (t or None)
+
+
 def eventos(ics, key, desde, hasta):
     out = []
     for ev in recurring_ical_events.of(icalendar.Calendar.from_ical(ics)).between(desde, hasta):
@@ -48,7 +56,8 @@ def eventos(ics, key, desde, hasta):
             fin = ini + (timedelta(days=1) if todo else timedelta(0))
         out.append({"uid": str(ev.get("UID", "")), "title": str(ev.get("SUMMARY", "")).strip() or "(ocupado)",
                     "start": ini.isoformat(), "end": fin.isoformat(), "all_day": todo,
-                    "location": str(ev.get("LOCATION", "")).strip() or None, "cal": key})
+                    "location": str(ev.get("LOCATION", "")).strip() or None,
+                    "description": limpiar(str(ev.get("DESCRIPTION", ""))), "cal": key})
     return out
 
 
