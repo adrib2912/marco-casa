@@ -270,6 +270,40 @@
     });
   }
 
+  /* subir una foto desde el móvil: se reduce aquí (1920 px y una miniatura de 480 px) y se guarda en Supabase */
+  function shrink(file,max,q){
+    return new Promise(function(ok,ko){
+      var url=URL.createObjectURL(file),im=new Image();
+      im.onload=function(){
+        var s=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),w=Math.round(im.naturalWidth*s),h=Math.round(im.naturalHeight*s);
+        var c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(url);
+        c.toBlob(function(b){b?ok({blob:b,w:w,h:h}):ko(fail('No se ha podido preparar la foto',400));},'image/jpeg',q);
+      };
+      im.onerror=function(){URL.revokeObjectURL(url);ko(fail('Ese archivo no es una foto que se pueda abrir',400));};
+      im.src=url;
+    });
+  }
+  function putObject(path,blob){
+    return token().then(function(t){
+      return realFetch(SB+'/storage/v1/object/fotos/'+path,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+t,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});
+    }).then(function(r){if(!r.ok)return r.json().catch(function(){return {};}).then(function(d){throw fail(d.message||d.error||'No se ha podido subir',r.status);});});
+  }
+  MC.uploadPhoto=function(file){
+    var d=new Date(),id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
+    var base=d.getFullYear()+'/'+pad(d.getMonth()+1)+'/'+id;
+    return Promise.all([shrink(file,1920,.86),shrink(file,480,.8)]).then(function(r){
+      return putObject(base+'.jpg',r[0].blob).then(function(){return putObject(base+'-m.jpg',r[1].blob);})
+        .then(function(){return rest('POST','fotos',{ruta:base+'.jpg',miniatura:base+'-m.jpg',ancho:r[0].w,alto:r[0].h},'return=minimal');});
+    });
+  };
+  MC.deletePhoto=function(id){
+    return rest('GET','fotos?select=ruta,miniatura&id=eq.'+encodeURIComponent(id)).then(function(rows){
+      var x=rows&&rows[0];if(!x)return;
+      return sb('DELETE','/storage/v1/object/fotos',{prefixes:[x.ruta,x.miniatura].filter(Boolean)})
+        .then(function(){return rest('DELETE','fotos?id=eq.'+encodeURIComponent(id));});
+    });
+  };
+
   /* ---------- temporizadores: en este marco ---------- */
   var TK='mc-temporizadores';
   function timers(){var t=get(TK);return t&&t.length?t:[];}

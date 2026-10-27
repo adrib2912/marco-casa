@@ -412,3 +412,11 @@ html.look-glass .photo .ctime{font-weight:500}
 .f-board .bwhy{font-size:3.6vh;font-weight:700;letter-spacing:-.02em;margin:-.2vh 0 1vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .f-board .bready.off .bf+.bf{border-top-color:rgba(255,255,255,.1)}
 .f-board .bt.free{background:rgba(48,209,88,.22);border-color:rgba(48,209,88,.35);color:#9ff0b8}
+
+/* avisos sobre las fotos (abajo a la izquierda, encima de la fecha) */
+.avisos{position:absolute;left:5vw;bottom:14vh;display:flex;flex-direction:column;align-items:flex-start;gap:1.2vh}
+.av{display:flex;align-items:center;gap:1vw;padding:1.2vh 2vh 1.2vh 1.6vh;border-radius:999px;font-weight:600;font-size:3.4vh;color:#fff;
+  background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.22);box-shadow:0 .4vh 2vh rgba(0,0,0,.18)}
+.av svg{width:3.8vh;height:3.8vh;flex:none}
+.av em{font-style:normal;opacity:.75;margin-left:.3vw}
+.av.amber svg{color:#ffcc66}.av.blue svg{color:#7cc4ff}.av.green svg{color:#7ee59a}.av.red{background:rgba(220,40,30,.8)}

@@ -55,7 +55,7 @@ window.HVStandby={
       HV.cfg.ha_alerts?HVJson('/api/ha/alerts').then(function(d){data.alerts=(d&&d.alerts)||[];},function(){}):null,
       HVJson('/api/meals/shopping').then(function(d){if(d&&d.ok!==false)data.shop=d;},function(){}),   // the today board
       HV.cfg.ha?HVJson('/api/ha/state').then(function(d){if(d&&d.ok!==false)data.ha=d;},function(){}):null,
-      HVJson('/api/storms').then(function(d){if(d&&d.ok!==false)data.storms=d;},function(){})
+      HVJson('/api/luz').then(function(d){if(d&&d.ok!==false)data.luz=d;},function(){})
     ]);
   }
   function playing(){
@@ -144,10 +144,48 @@ window.HVStandby={
     else if(tall(p))pic='<img class="pbg" alt="" src="'+url(p,'w=160&blur=1')+'"><img class="whole" alt="" src="'+url(p,'w='+H)+'">';
     else pic='<img alt="" style="object-position:'+position(p,null)+'" src="'+url(p,'w='+W)+'">';
     var d=el('photo');d.ph={p:p,q:q};
-    d.innerHTML=pic+'<div class="shade-b"></div><div class="foot">'+dateLine()+'</div><div class="ctime">'+timeText()+'</div>';
-    d.tick=function(){d.querySelector('.ctime').textContent=timeText();};
+    d.innerHTML=pic+'<div class="shade-b"></div><div class="avisos">'+avisosHtml()+'</div><div class="foot">'+dateLine()+'</div><div class="ctime">'+timeText()+'</div>';
+    d.tick=function(){d.querySelector('.ctime').textContent=timeText();var a=d.querySelector('.avisos');if(a&&HV.local().s<2)a.innerHTML=avisosHtml();};
     return d;
   }
+  /* ---------- avisos sobre las fotos: solo cuando hay algo que decir (como mucho dos) ----------
+     Ajustes > Avisos sobre las fotos los apaga (localStorage 'mc-avisos' = 'off'). */
+  var AV={cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    rain:'<path d="M7 15h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.5 1.6A3.3 3.3 0 0 0 7 15z"/><path d="M8.5 18l-1 2.5M12.5 18l-1 2.5M16.5 18l-1 2.5"/>',
+    bolt:'<path d="M13 2.5L4.5 13.5H11L10 21.5L19.5 10H13z"/>',
+    timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/>',
+    check:'<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.5l3 3 5-6"/>'};
+  function avisosOn(){try{return localStorage.getItem('mc-avisos')!=='off';}catch(e){return true;}}
+  function hhmm(iso){return (+iso.slice(11,13))+':'+iso.slice(14,16);}
+  function avisos(){
+    var out=[],t=HV.local(),now=HV.now().getTime(),hk=t.y+'-'+HV.pad(t.mo)+'-'+HV.pad(t.d)+'T'+HV.pad(t.h)+':00';
+    var today=dayKeyOf(t),tomorrow=dayKeyOf(addDays(1)),i;
+    // (los temporizadores ya salen abajo a la derecha)
+    // 2. un plan de hoy que empieza en menos de hora y media
+    var evs=((data.frame&&data.frame.calendar_events)||[]).filter(function(e){return !HV.isHoliday(e.cal);});
+    for(i=0;i<evs.length;i++){var e=evs[i],m=(new Date(e.start).getTime()-now)/60000;
+      if(!e.all_day&&m>0&&m<=90){out.push({i:'cal',t:HV.esc(e.title)+' <em>'+(m<60?'en '+Math.round(m)+' min':'a las '+HV.hm(new Date(e.start)))+'</em>'});break;}}
+    // 3. lluvia en las próximas dos horas
+    var n=data.frame&&data.frame.weather&&data.frame.weather.nowcast;
+    if(n&&n.state==='start'&&n.mins<=120)out.push({i:'rain',c:'blue',t:'Lluvia '+(n.mins<=5?'ya':'hacia las '+hhmm(n.at))});
+    else if(n&&(n.state==='rain'||n.state==='stop'))out.push({i:'rain',c:'blue',t:'Está lloviendo'});
+    // 4. lo de mañana (por la tarde) o lo de todo el día de hoy (por la mañana)
+    var k=t.h>=18?tomorrow:t.h<12?today:null;
+    if(k){var list=eventsOn(k).filter(function(e){return !HV.isHoliday(e.cal)&&(e.all_day||(k===tomorrow&&HV.local(new Date(e.start)).h<11));});
+      if(list.length)out.push({i:'cal',c:'amber',t:(k===tomorrow?'Mañana: ':'Hoy: ')+HV.esc(list[0].title)+(list.length>1?' <em>+'+(list.length-1)+'</em>':'')});}
+    // 5. la luz: si ahora es el rato más barato que queda
+    var L=data.luz,b=L&&L.best2;
+    if(b&&b.from<=hk&&hk<=b.to)out.push({i:'bolt',c:'green',t:'Luz barata hasta las '+((+b.to.slice(11,13)+1)%24)+':00'});
+    // 6. por la tarde, si quedan tareas
+    if(t.h>=17&&t.h<22&&data.tasks&&data.tasks.left)out.push({i:'check',t:data.tasks.left+' tarea'+(data.tasks.left===1?'':'s')+' pendiente'+(data.tasks.left===1?'':'s')});
+    return out.slice(0,2);
+  }
+  function avisosHtml(){
+    if(!avisosOn())return '';
+    var h='';avisos().forEach(function(a){h+='<div class="av'+(a.c?' '+a.c:'')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+AV[a.i]+'</svg><span>'+a.t+'</span></div>';});
+    return h;
+  }
+
   /* ---------- shared bits for the information faces ---------- */
   function dayKeyOf(t){return t.y+'-'+HV.pad(t.mo)+'-'+HV.pad(t.d);}
   function addDays(n){return HV.local(new Date(HV.now().getTime()+n*864e5));}

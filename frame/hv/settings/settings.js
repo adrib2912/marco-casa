@@ -42,7 +42,8 @@
       row('Fotos en vertical',{blur:'Enteras, con los lados difuminados',pair:'Dos juntas',both:'Por parejas; si sobra una, entera'}[settings.tall],
         seg('tall',[['blur','Entera'],['pair','Dos juntas'],['both','Las dos cosas']],settings.tall))+
       row('Cada pantalla','Tiempo del resto de pantallas en reposo',seg('face',[[15,'15 s'],[30,'30 s'],[60,'1 min'],[120,'2 min']],settings.face))+
-      row('Brillo','Del modo reposo',seg('shade',[[0,'Normal'],[30,'Suave'],[60,'Tenue']],settings.shade)));
+      row('Brillo','Del modo reposo',seg('shade',[[0,'Normal'],[30,'Suave'],[60,'Tenue']],settings.shade))+
+      row('Avisos sobre las fotos','Planes cercanos, lluvia, luz barata, lo de mañana',seg('avisos',[['on','Sí'],['off','No']],avisos())));
     return h;
   }
   /* every HomeView screen, named as its own title reads ('' is the Home launcher). Music only when Sonos or Spotify is set up, Camera only when a camera is. */
@@ -97,8 +98,10 @@
     try{localStorage.setItem(KEY,JSON.stringify(settings));HV.toast(note||'Saved for this screen');}
     catch(e){HV.toast('Aplicado por ahora, pero no se ha podido guardar.');}
   }
+  function avisos(){try{return localStorage.getItem('mc-avisos')==='off'?'off':'on';}catch(e){return 'on';}}
   document.addEventListener('click',function(e){
     var b=e.target.closest('.st-seg button');
+    if(b&&b.parentNode.getAttribute('data-id')==='avisos'){try{localStorage.setItem('mc-avisos',b.getAttribute('data-v'));}catch(x){}draw();return;}
     if(b){
       var id=b.parentNode.getAttribute('data-id'),v=b.getAttribute('data-v');
       if(id==='wx'){try{localStorage.setItem('hv-wx',v);}catch(x){}HV.toast('Weather: '+(v==='modern'?'Modern':'Apple')+' style');draw();return;}

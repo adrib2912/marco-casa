@@ -23,6 +23,8 @@ temporizadores y fotos en reposo. Todo en español y sin servidor propio:
      `[{"key":"familia","url":"https://calendar.google.com/calendar/ical/.../private-.../basic.ics"},{"key":"festivos","url":"https://calendar.google.com/calendar/ical/es.spain%23holiday%40group.v.calendar.google.com/public/basic.ics"}]`
 5. **GitHub → Settings → Pages:** publica desde la rama `main`, carpeta `/` (raíz).
 6. Abre `https://USUARIO.github.io/marco-casa/` y entra con la cuenta de la casa. El marco lo recuerda.
+7. **En los móviles** abre `https://USUARIO.github.io/marco-casa/frame/hv/movil/`, entra y usa "Añadir a pantalla de inicio".
+   Desde ahí se añade la compra y las tareas y se suben fotos (se reducen en el propio móvil antes de subirlas).
 
 ## Estructura
 

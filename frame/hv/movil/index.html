@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Casa</title>
+<meta name="theme-color" content="#f2f2f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Casa">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icono-180.png">
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--ink:#1d1d1f;--ink2:#6e6e73;--ink3:#8e8e93;--sep:rgba(60,60,67,.16);--fill:#e9e9ee;
+  --blue:#0a84ff;--green:#34c759;--orange:#ff9f0a;--red:#ff3b30}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.35 -apple-system,system-ui,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{border:0;background:none;padding:0;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 96px)}
+h1{margin:0;font-size:32px;letter-spacing:-.02em}
+.sub{color:var(--ink2);margin:2px 0 16px;font-weight:500}
+.card{background:var(--card);border-radius:18px;padding:6px 14px;margin-bottom:16px}
+.add{display:flex;gap:8px;padding:10px 0}
+.add input{flex:1;min-width:0;border:0;background:var(--bg);border-radius:12px;padding:12px 14px;font-size:17px}
+.add input:focus{outline:2px solid var(--blue)}
+.add button{background:var(--blue);color:#fff;font-weight:600;border-radius:12px;padding:0 18px}
+.tareas .add button{background:var(--green)}
+.who{display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px}
+.who button{background:var(--bg);border-radius:999px;padding:7px 14px;font-size:15px;font-weight:600}
+.who button.on{background:var(--ink);color:#fff}
+.row{display:flex;align-items:center;gap:12px;min-height:54px;border-top:1px solid var(--sep)}
+.row .tx{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;padding:10px 0}
+.box{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid #c7c7cc;display:flex;align-items:center;justify-content:center}
+.box svg{width:16px;height:16px}
+.done .box{background:var(--blue);border-color:var(--blue)}
+.tareas .done .box{background:var(--green);border-color:var(--green)}
+.done .nm{color:var(--ink3);text-decoration:line-through}
+.nm{font-weight:500;overflow-wrap:anywhere}
+.tag{font-size:13px;font-weight:700;color:#fff;border-radius:999px;padding:2px 8px;flex:none}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:32px;height:32px;border-radius:50%;background:#e3efff;color:var(--blue);font-weight:700;font-size:18px}
+.qty b{min-width:18px;text-align:center}
+.x{width:36px;height:36px;color:var(--ink3);font-size:22px}
+.empty{color:var(--ink3);padding:16px 0;text-align:center}
+.foot{display:flex;justify-content:flex-end;border-top:1px solid var(--sep);padding:10px 0}
+.pill{background:var(--fill);border-radius:999px;padding:8px 14px;font-weight:600;font-size:15px}
+h3{margin:4px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:12px}
+.chips button{background:var(--card);border-radius:999px;padding:8px 13px;font-weight:600;font-size:15px}
+.chips button::before{content:'+ ';color:var(--blue)}
+.up{display:block;width:100%;background:var(--orange);color:#fff;font-weight:700;font-size:18px;border-radius:16px;padding:16px;margin-bottom:8px}
+.prog{color:var(--ink2);text-align:center;min-height:22px;margin-bottom:10px;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;border-radius:14px;overflow:hidden}
+.grid button{aspect-ratio:1;background:#ddd center/cover no-repeat}
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(249,249,251,.94);border-top:1px solid var(--sep);
+  display:flex;justify-content:center;padding:6px 0 calc(env(safe-area-inset-bottom) + 6px);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+nav button{flex:0 1 160px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--ink3);padding:4px 0}
+nav svg{width:26px;height:26px}
+nav button.on{color:var(--blue)}
+.view{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9;padding:20px}
+.view.on{display:flex}
+.view img{max-width:100%;max-height:72vh;border-radius:10px}
+.view .acts{display:flex;gap:12px;margin-top:18px}
+.view .acts button{border-radius:999px;padding:12px 22px;font-weight:600;background:rgba(255,255,255,.16);color:#fff}
+.view .acts .del{background:var(--red)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translate(-50%,120px);background:#1d1d1f;color:#fff;
+  padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;transition:transform .25s;z-index:10;max-width:90vw}
+.toast.on{transform:translate(-50%,0)}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#000;--card:#1c1c1e;--ink:#f5f5f7;--ink2:#a1a1a6;--ink3:#8e8e93;--sep:rgba(255,255,255,.12);--fill:#2c2c2e}
+  .qty button{background:#0a2a4d}
+  nav{background:rgba(22,22,24,.94)}
+  .who button.on{background:#f5f5f7;color:#000}
+}
+</style>
+</head><body>
+<main id="root"></main>
+<nav id="nav">
+  <button data-tab="compra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H7"/><circle cx="9.5" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>Compra</button>
+  <button data-tab="tareas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M8 12.5l3 3 5-6"/></svg>Tareas</button>
+  <button data-tab="fotos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 15l3-3 2 2 3-4 3 4"/></svg>Fotos</button>
+</nav>
+<div class="view" id="view"><img id="vimg" alt=""><div class="acts"><button id="vclose">Cerrar</button><button class="del" id="vdel">Borrar del marco</button></div></div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<div class="toast" id="toast"></div>
+<script src="../config.js"></script>
+<script src="../../shared/datos.js?v=3"></script>
+<script>
+/* Casa en el móvil: lo mismo que el marco, pero para añadir cosas desde fuera (compra, tareas y fotos). */
+(function(){
+  var root=document.getElementById('root'),H=window.HV_CONFIG||{},PEOPLE=H.people||[];
+  var tab='compra',D={},who='',busy=false,viewing=null;
+  try{tab=localStorage.getItem('mc-movil-tab')||'compra';}catch(e){}
+  var CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  var COLORS=['#ff9f0a','#0a84ff','#bf5af2','#ff375f','#30b0c7','#ac8e68'];
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function color(p){var i=PEOPLE.indexOf(p);return i<0?'#8e8e93':COLORS[i%COLORS.length];}
+  var tT;function toast(t){var e=document.getElementById('toast');e.textContent=t;e.classList.add('on');clearTimeout(tT);tT=setTimeout(function(){e.classList.remove('on');},2600);}
+  function get(u){return fetch(u).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Error');return d;});});}
+  function post(u,o){return fetch(u,{method:'POST',body:JSON.stringify(o)}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Error');return d;});});}
+
+  function compra(){
+    var S=D.compra,ST=D.hab;
+    var h='<h1>Compra</h1><div class="sub">'+(!S?'Cargando':S.left?S.left+' por comprar':'La lista está vacía')+'</div>';
+    h+='<div class="card"><form class="add" data-f="compra"><input id="in" placeholder="Añadir algo" enterkeyhint="done" autocomplete="off" maxlength="60"><button>Añadir</button></form>';
+    if(S){S.items.forEach(function(x){
+      h+='<div class="row'+(x.checked?' done':'')+'"><button class="tx" data-k="'+esc(x.key)+'" data-c="'+(x.checked?0:1)+'"><span class="box">'+(x.checked?CHECK:'')+'</span><span class="nm">'+esc(x.name)+'</span></button>'+
+        (x.checked?'':'<div class="qty"><button data-q="'+esc(x.key)+'" data-v="'+((x.qty||1)-1)+'">−</button><b>'+(x.qty||1)+'</b><button data-q="'+esc(x.key)+'" data-v="'+((x.qty||1)+1)+'">+</button></div>')+'</div>';});
+      if(!S.items.length)h+='<div class="empty">Nada que comprar</div>';
+      if(S.items.some(function(x){return x.checked;}))h+='<div class="foot"><button class="pill" data-a="clr">Quitar lo comprado</button></div>';}
+    h+='</div>';
+    if(ST&&S){var on={};S.items.forEach(function(x){if(!x.checked)on[x.key]=1;});
+      var c='';ST.items.forEach(function(x){if(!on[x.key])c+='<button data-st="'+esc(x.name)+'">'+esc(x.name)+'</button>';});
+      if(c)h+='<h3>Comprar otra vez</h3><div class="chips">'+c+'</div>';}
+    return h;
+  }
+  function tareas(){
+    var T=D.tareas;
+    var h='<h1>Tareas</h1><div class="sub">'+(!T?'Cargando':T.left?T.left+' por hacer':'Todo hecho')+'</div>';
+    h+='<div class="card tareas"><form class="add" data-f="tareas"><input id="in" placeholder="Nueva tarea" enterkeyhint="done" autocomplete="off" maxlength="80"><button>Añadir</button></form>';
+    if(PEOPLE.length){h+='<div class="who"><button data-w=""'+(who===''?' class="on"':'')+'>Cualquiera</button>';
+      PEOPLE.forEach(function(p){h+='<button data-w="'+esc(p)+'"'+(who===p?' class="on"':'')+'>'+esc(p)+'</button>';});h+='</div>';}
+    if(T){T.items.forEach(function(x){
+      h+='<div class="row'+(x.done?' done':'')+'"><button class="tx" data-t="'+esc(x.id)+'"><span class="box">'+(x.done?CHECK:'')+'</span><span class="nm">'+esc(x.title)+'</span>'+
+        (x.who?'<span class="tag" style="background:'+color(x.who)+'">'+esc(x.who)+'</span>':'')+'</button>'+(x.done?'<button class="x" data-rm="'+esc(x.id)+'" aria-label="Borrar">×</button>':'')+'</div>';});
+      if(!T.items.length)h+='<div class="empty">Nada pendiente</div>';
+      if(T.items.some(function(x){return x.done;}))h+='<div class="foot"><button class="pill" data-a="clrt">Borrar las hechas</button></div>';}
+    return h+'</div>';
+  }
+  function fotos(){
+    var F=D.fotos;
+    var h='<h1>Fotos</h1><div class="sub">'+(!F?'Cargando':F.photos.length+' en el marco')+'</div>';
+    h+='<button class="up" data-a="up"'+(busy?' disabled':'')+'>'+(busy?'Subiendo…':'Subir fotos')+'</button><div class="prog" id="prog"></div>';
+    if(F&&F.photos.length){h+='<div class="grid">';F.photos.forEach(function(p){h+='<button data-p="'+esc(p.id)+'" style="background-image:url(\''+esc(p.thumb||p.url)+'\')"></button>';});h+='</div>';}
+    else if(F)h+='<div class="empty">Aún no hay fotos. Las que subas saldrán en el marco en un minuto.</div>';
+    return h;
+  }
+  function draw(){
+    var a=document.activeElement,keep=a&&a.id==='in'?a.value:null;
+    root.innerHTML=tab==='compra'?compra():tab==='tareas'?tareas():fotos();
+    if(keep!==null){var i=document.getElementById('in');i.value=keep;}
+    [].forEach.call(document.querySelectorAll('nav button'),function(b){b.classList.toggle('on',b.getAttribute('data-tab')===tab);});
+  }
+  function load(){
+    var jobs=tab==='compra'?[get('/api/meals/shopping').then(function(d){D.compra=d;}),get('/api/meals/staples').then(function(d){D.hab=d;})]:
+      tab==='tareas'?[get('/api/tasks').then(function(d){D.tareas=d;})]:[get('/api/frame/photos').then(function(d){D.fotos=d;})];
+    return Promise.all(jobs).then(draw,function(e){toast(e.message);});
+  }
+  function act(p){return p.then(function(){return load();},function(e){toast(e.message);load();});}
+
+  document.getElementById('nav').onclick=function(e){var b=e.target.closest('[data-tab]');if(!b)return;tab=b.getAttribute('data-tab');
+    try{localStorage.setItem('mc-movil-tab',tab);}catch(x){}draw();load();};
+  root.onsubmit=function(e){e.preventDefault();var i=document.getElementById('in'),v=i.value.trim();if(!v)return;i.value='';
+    if(tab==='compra')act(post('/api/meals/shopping',{add:v}).then(function(){toast('Añadido: '+v);}));
+    else act(post('/api/tasks',{add:v,who:who}).then(function(){toast('Tarea añadida');}));};
+  root.onclick=function(e){var b=e.target.closest('button');if(!b)return;var g=function(k){return b.getAttribute(k);};
+    if(g('data-k')!==null)return act(post('/api/meals/shopping',{key:g('data-k'),checked:g('data-c')==='1'}));
+    if(g('data-q')!==null)return act(post('/api/meals/shopping',{key:g('data-q'),qty:+g('data-v')}));
+    if(g('data-st')!==null)return act(post('/api/meals/shopping',{add:g('data-st')}).then(function(){toast('Añadido: '+g('data-st'));}));
+    if(g('data-w')!==null){who=g('data-w');draw();return;}
+    if(g('data-t')!==null)return act(post('/api/tasks',{toggle:g('data-t')}));
+    if(g('data-rm')!==null)return act(post('/api/tasks',{remove:g('data-rm')}));
+    if(g('data-p')!==null){viewing=null;(D.fotos.photos||[]).forEach(function(p){if(p.id===g('data-p'))viewing=p;});
+      if(viewing){document.getElementById('vimg').src=viewing.url;document.getElementById('view').classList.add('on');}return;}
+    var a=g('data-a');
+    if(a==='clr')return act(post('/api/meals/shopping',{clear_checked:true}));
+    if(a==='clrt')return act(post('/api/tasks',{clear_done:true}));
+    if(a==='up'&&!busy)document.getElementById('file').click();
+  };
+  document.getElementById('file').onchange=function(){
+    var files=[].slice.call(this.files||[]),done=0,bad=0;this.value='';if(!files.length)return;
+    busy=true;draw();
+    function prog(){var p=document.getElementById('prog');if(p)p.textContent='Subiendo '+Math.min(done+1,files.length)+' de '+files.length+'…';}
+    var chain=Promise.resolve();
+    files.forEach(function(f){chain=chain.then(function(){prog();return MC.uploadPhoto(f).then(function(){done++;},function(){bad++;done++;});});});
+    chain.then(function(){busy=false;toast(bad?(files.length-bad)+' subidas, '+bad+' con error':(files.length===1?'Foto subida':files.length+' fotos subidas'));
+      try{localStorage.removeItem('mc-firmas');}catch(e){}load();});
+  };
+  document.getElementById('vclose').onclick=function(){document.getElementById('view').classList.remove('on');};
+  document.getElementById('vdel').onclick=function(){
+    if(!viewing||!confirm('¿Borrar esta foto del marco?'))return;
+    document.getElementById('view').classList.remove('on');act(MC.deletePhoto(viewing.id).then(function(){toast('Foto borrada');}));};
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)load();});
+  setInterval(function(){if(!document.hidden&&!busy&&!(document.activeElement&&document.activeElement.id==='in'))load();},15000);
+  draw();load();
+})();
+</script>
+</body></html>
