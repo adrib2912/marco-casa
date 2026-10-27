@@ -53,6 +53,9 @@ grant usage on schema public to authenticated;
 grant select, insert, update, delete on tareas, compra, habituales, fotos to authenticated;
 grant select on calendario, luz to authenticated;
 revoke all on tareas, compra, habituales, fotos, calendario, luz from anon;
+-- las Actions de GitHub escriben con la clave secreta (rol service_role)
+grant usage on schema public to service_role;
+grant select, update on calendario, luz to service_role;
 
 alter table tareas enable row level security;
 alter table compra enable row level security;
