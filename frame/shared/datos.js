@@ -132,7 +132,7 @@
     var c=get('mc-cal');
     if(c&&nowS()-c.t<300)return Promise.resolve(c.d);
     return rest('GET','calendario?select=eventos,actualizado&id=eq.1').then(function(rows){
-      var d=(rows&&rows[0])||{eventos:[],actualizado:null};put('mc-cal',{t:nowS(),d:d});return d;},
+      var d=(rows&&rows[0])||{eventos:[],actualizado:null};if(d.actualizado)put('mc-cal',{t:nowS(),d:d});return d;},
       function(e){if(c)return c.d;throw e;});
   }
 
@@ -169,7 +169,7 @@
   function luzDoc(){
     var c=get('mc-luz');
     var load=c&&nowS()-c.t<900?Promise.resolve(c.d):rest('GET','luz?select=horas,actualizado&id=eq.1').then(function(rows){
-      var d=(rows&&rows[0])||{horas:[],actualizado:null};put('mc-luz',{t:nowS(),d:d});return d;},function(e){if(c)return c.d;throw e;});
+      var d=(rows&&rows[0])||{horas:[],actualizado:null};if(d.horas&&d.horas.length)put('mc-luz',{t:nowS(),d:d});return d;},function(e){if(c)return c.d;throw e;});
     return load.then(function(d){
       var now=local(),hk=now.slice(0,13)+':00',today=now.slice(0,10),all=d.horas||[];
       var todays=all.filter(function(h){return h.t.slice(0,10)===today;}),sorted=todays.map(function(h){return h.p;}).sort(function(a,b){return a-b;});
