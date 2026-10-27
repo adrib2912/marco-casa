@@ -42,10 +42,16 @@ def precios(doc):
     return [{"t": k, "p": round(sum(vs) / len(vs) / 1000, 4)} for k, vs in sorted(horas.items())]
 
 
+def fallo(msg):
+    """Termina con el error visible en la página de la Action (anotación) y en el log."""
+    print("::error::" + msg.replace("\n", " "), flush=True)
+    sys.exit(1)
+
+
 def secreto(nombre):
     v = os.environ.get(nombre, "").strip()
     if not v:
-        sys.exit(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
+        fallo(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
     return v
 
 
@@ -57,7 +63,7 @@ def guardar(url, cuerpo, clave):
         with urllib.request.urlopen(req, timeout=30) as r:
             return r.status
     except urllib.error.HTTPError as e:
-        sys.exit(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
+        fallo(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
 
 
 def main():
@@ -66,10 +72,13 @@ def main():
     try:
         doc = bajar(url)
     except Exception as e:
-        sys.exit(f"Red Eléctrica no responde ({type(e).__name__}: {e})")
-    horas = precios(doc)
+        fallo(f"Red Eléctrica no responde ({type(e).__name__}: {e})")
+    try:
+        horas = precios(doc)
+    except (ValueError, KeyError, TypeError) as e:
+        fallo(f"Red Eléctrica ha cambiado el formato: {e}")
     if not horas:
-        sys.exit("Sin precios; no toco lo que hay en Supabase")
+        fallo("Sin precios; no toco lo que hay en Supabase")
     cuerpo = json.dumps({"horas": horas, "actualizado": datetime.now(ZONA).isoformat()}).encode()
     url = secreto("SUPABASE_URL").rstrip("/") + "/rest/v1/luz?id=eq.1"
     print("Supabase:", guardar(url, cuerpo, secreto("SUPABASE_SERVICE_KEY")), "·", len(horas), "horas,", horas[0]["t"], "a", horas[-1]["t"])

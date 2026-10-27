@@ -62,10 +62,16 @@ def eventos(ics, key, desde, hasta):
     return out
 
 
+def fallo(msg):
+    """Termina con el error visible en la página de la Action (anotación) y en el log."""
+    print("::error::" + msg.replace("\n", " "), flush=True)
+    sys.exit(1)
+
+
 def secreto(nombre):
     v = os.environ.get(nombre, "").strip()
     if not v:
-        sys.exit(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
+        fallo(f"Falta el secreto {nombre} en GitHub (Settings → Secrets and variables → Actions)")
     return v
 
 
@@ -77,14 +83,14 @@ def guardar(url, cuerpo, clave):
         with urllib.request.urlopen(req, timeout=30) as r:
             return r.status
     except urllib.error.HTTPError as e:
-        sys.exit(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
+        fallo(f"Supabase ha respondido {e.code}: {e.read().decode(errors='ignore')[:300]}")
 
 
 def main():
     try:
         cals = json.loads(secreto("CALENDARIOS"))
     except json.JSONDecodeError as e:
-        sys.exit(f"El secreto CALENDARIOS no es un texto válido (revisa comillas y corchetes): {e.msg}")
+        fallo(f"El secreto CALENDARIOS no es un texto válido (revisa comillas y corchetes): {e.msg}")
     hoy = datetime.now(ZONA).date()
     desde, hasta = hoy - timedelta(days=ANTES), hoy + timedelta(days=DESPUES)
     todos, vistos, fallos = [], set(), []
@@ -92,7 +98,7 @@ def main():
         try:
             evs = eventos(bajar(c["url"]), c["key"], desde, hasta)
         except Exception as e:                       # sin el enlace en el error: es secreto
-            fallos.append(c["key"]); print(f"{c['key']}: no se ha podido leer ({type(e).__name__})", file=sys.stderr)
+            fallos.append(c["key"]); print(f"::warning::Calendario {c['key']}: no se ha podido leer ({type(e).__name__})", flush=True)
             continue
         for e in evs:                                # el mismo evento en dos calendarios sale una vez
             k = (e["uid"] or e["title"].casefold(), e["start"])
@@ -100,7 +106,7 @@ def main():
                 vistos.add(k); todos.append(e)
         print(f"{c['key']}: {len(evs)} eventos")
     if fallos and not todos:
-        sys.exit("Ningún calendario se ha podido leer; no toco lo que ya hay en Supabase")
+        fallo("Ningún calendario se ha podido leer; no toco lo que ya hay en Supabase")
     todos.sort(key=lambda e: e["start"])
     cuerpo = json.dumps({"eventos": todos, "actualizado": datetime.now(ZONA).isoformat()}).encode()
     url = secreto("SUPABASE_URL").rstrip("/") + "/rest/v1/calendario?id=eq.1"
