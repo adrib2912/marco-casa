@@ -46,7 +46,14 @@ create table if not exists luz (          -- precio PVPC por horas; lo rellena l
 );
 insert into luz (id) values (1) on conflict do nothing;
 
--- permisos: todo cerrado salvo para usuarios con sesión
+-- permisos: todo cerrado salvo para usuarios con sesión.
+-- Las tablas no se exponen solas (opción "Automatically expose new tables" desactivada): se dan permisos
+-- solo al rol "authenticated" (la cuenta de la casa). El rol "anon" (cualquiera sin sesión) no recibe nada.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on tareas, compra, habituales, fotos to authenticated;
+grant select on calendario, luz to authenticated;
+revoke all on tareas, compra, habituales, fotos, calendario, luz from anon;
+
 alter table tareas enable row level security;
 alter table compra enable row level security;
 alter table habituales enable row level security;
