@@ -2,8 +2,8 @@
    SUPABASE_URL y SUPABASE_KEY (la "anon / publishable") son públicas: pueden estar aquí sin problema.
    La clave secreta (service_role) NUNCA va aquí: solo en los secretos de GitHub. */
 window.MC_CONFIG={
-  SUPABASE_URL:'https://TU-PROYECTO.supabase.co',
-  SUPABASE_KEY:'TU-ANON-KEY',
+  SUPABASE_URL:'https://rzxsohrvfvupwygknibj.supabase.co',
+  SUPABASE_KEY:'sb_publishable_jelHUpezfx8ccFAz9ejUoQ_nKivMdoq',
   BASE:'/marco-casa/'                     // la ruta de GitHub Pages: https://usuario.github.io/marco-casa/
 };
 window.HV_CONFIG={
