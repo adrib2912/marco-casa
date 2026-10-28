@@ -17,13 +17,13 @@
 window.HVSched=(function(){
   var KEY='hv-sched', SHORT=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   var DEF={
-    weekdays:[[420,['info','photos','weather','today','up'],'Mañana'],
-              [600,['photos','info','week','analog','weather','up'],'Día'],
-              [1020,['photos','info','week','up','analog'],'Tarde'],
+    weekdays:[[420,['photos'],'Mañana'],
+              [600,['photos'],'Día'],
+              [1020,['photos'],'Tarde'],
               [1410,['night'],'Noche']],
-    weekend: [[480,['photos','info','weather','week'],'Mañana'],
-              [600,['photos','info','week','analog','weather','up'],'Día'],
-              [1020,['photos','info','week','up','analog'],'Tarde'],
+    weekend: [[480,['photos'],'Mañana'],
+              [600,['photos'],'Día'],
+              [1020,['photos'],'Tarde'],
               [1410,['night'],'Noche']]};
   function keysOf(on){var k=[];for(var x in on)if(x!=='alert')k.push(x);return k;}
   function defaults(on){
