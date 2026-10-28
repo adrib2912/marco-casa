@@ -192,7 +192,8 @@
         '<div><div class="line">Nothing playing</div><div class="line" style="color:rgba(255,255,255,.7)">'+(HV.cfg.sonos?rooms.length+' speaker'+(rooms.length===1?'':'s'):'Spotify')+'</div></div>');
     }else{
       var ps=(d.photos&&d.photos.photos)||[],p0=ps.length?ps[Math.floor((HV.now().getTime()/60000)%ps.length)]:null;
-      html+=w('photos','/marco-casa/frame/hv/photos/','Fotos','photo','<div class="line">'+(d.photos?ps.length+' foto'+(ps.length===1?'':'s'):'Cargando fotos')+'</div>',p0?'background-image:url(\''+p0.url+'?w=480\')':'');
+      var p0u=p0?p0.url+(p0.url.indexOf('?')<0?'?':'&')+'w=480':'';
+      html+=w('photos','/marco-casa/frame/hv/photos/','Fotos','photo','<div class="line">'+(d.photos?ps.length+' foto'+(ps.length===1?'':'s'):'Cargando fotos')+'</div>',p0?'background-image:url(\''+p0u+'\')':'');
     }
     html+=weekTile();
     grid.innerHTML=html;
