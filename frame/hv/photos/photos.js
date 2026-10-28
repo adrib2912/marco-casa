@@ -23,10 +23,18 @@
   function addCard(){
     return '<div class="ph-add"><div class="ph-side"><div><h3>Añadir fotos</h3><p>Se suben desde el móvil y aparecen aquí y en el modo reposo en un minuto.</p></div></div></div>';
   }
+  /* "Octubre 2026", o "Octubre" si es el año en curso */
+  function monthLabel(t){
+    var now=HV.local(),m=HV.MONTHS[t.mo-1];
+    m=m.charAt(0).toUpperCase()+m.slice(1);
+    return t.y===now.y?m:m+' '+t.y;
+  }
   function draw(){
     shown=media.slice();
-    var h=addCard();
+    var h=addCard(),lastKey=null;
     shown.forEach(function(p,i){
+      var t=HV.local(new Date((p.t||0)*1000)),key=t.y+'-'+t.mo;
+      if(p.t&&key!==lastKey){h+='<div class="ph-month">'+HV.esc(monthLabel(t))+'</div>';lastKey=key;}
       h+='<button class="ph-t" data-i="'+i+'" aria-label="Abrir foto '+(i+1)+'"><img src="'+HV.esc(thumb(p))+'" alt="" loading="lazy">'+
         (p.kind==='video'?'<span class="ph-badge">Vídeo</span>':'')+'</button>';
     });
