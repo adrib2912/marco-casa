@@ -129,7 +129,7 @@
       open.slice(0,3).forEach(function(x,i){rows+='<div>'+HV.esc(x.name)+(i===2&&left>3?' <span>+'+(left-3)+' más</span>':'')+'</div>';});
       body='<div class="cnt"><div class="big">'+left+'</div><div class="sub">por comprar</div></div><div class="items">'+rows+'</div>';}
     else body='<div><div class="big">'+(S?left:'—')+'</div><div class="line">'+(!S?'Cargando la lista':S.items.length?'Todo comprado':'Lista vacía')+'</div></div>';
-    return w(left?'on':'','/marco-casa/frame/hv/shopping/','Compra','cart',body);
+    return w(left?'on':'','/marco-casa/frame/hv/tareas/?t=compra','Compra','cart',body);
   }
 
   // Luz: el precio de ahora (barata, normal o cara respecto al día) y las dos horas seguidas más baratas que quedan
@@ -151,7 +151,7 @@
       open.slice(0,3).forEach(function(x,i){rows+='<div>'+HV.esc(x.title)+(x.who?' <span>· '+HV.esc(x.who)+'</span>':'')+(i===2&&left>3?' <span>+'+(left-3)+' más</span>':'')+'</div>';});
       body='<div class="cnt"><div class="big">'+left+'</div><div class="sub">por hacer</div></div><div class="items">'+rows+'</div>';}
     else body='<div><div class="big">'+(T?left:'—')+'</div><div class="line">'+(!T?'Cargando':T.items.length?'Todo hecho':'Nada pendiente')+'</div></div>';
-    return w('tasks'+(left?' on':''),'/marco-casa/frame/hv/tasks/','Tareas','check',body);
+    return w('tasks'+(left?' on':''),'/marco-casa/frame/hv/tareas/?t=tareas','Tareas','check',body);
   }
 
   // This week: tomorrow and the 6 days after, each with up to 2 events, backpack stickers by the day name, and its dinner

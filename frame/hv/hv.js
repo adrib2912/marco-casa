@@ -159,7 +159,7 @@
 
   /* screens a command can open */
   HV.SCREENS={standby:'/marco-casa/frame/hv/standby/',timer:'/marco-casa/frame/hv/timer/',dinner:'/marco-casa/frame/hv/dinner/',
-    shopping:'/marco-casa/frame/hv/shopping/',today:'/marco-casa/frame/hv/today/',calendar:'/marco-casa/frame/hv/calendar/',weather:'/marco-casa/frame/hv/weather/',launcher:'/marco-casa/frame/hv/',
+    shopping:'/marco-casa/frame/hv/tareas/?t=compra',tasks:'/marco-casa/frame/hv/tareas/?t=tareas',today:'/marco-casa/frame/hv/today/',calendar:'/marco-casa/frame/hv/calendar/',weather:'/marco-casa/frame/hv/weather/',launcher:'/marco-casa/frame/hv/',
     meals:'/marco-casa/frame/hv/meals/',music:'/marco-casa/frame/hv/music/',photos:'/marco-casa/frame/hv/photos/',night:'/marco-casa/frame/hv/night/',camera:'/marco-casa/frame/hv/camera/',ha:'/marco-casa/frame/hv/ha/'};
   var SEEN='hv-cmd-seen';
   function seen(){try{return +localStorage.getItem(SEEN)||0;}catch(e){return 0;}}

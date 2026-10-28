@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Tareas</title>
+<link rel="stylesheet" href="/marco-casa/frame/hv/hv.css?v=7">
+<link rel="stylesheet" href="/marco-casa/frame/hv/shopping/shopping.css?v=8">
+<link rel="stylesheet" href="/marco-casa/frame/hv/tasks/tasks.css?v=1">
+<link rel="stylesheet" href="/marco-casa/frame/hv/tareas/tareas.css?v=1">
+</head><body>
+<div class="hv-seg" id="seg"><button data-t="compra">Súper</button><button data-t="tareas">Tareas</button></div>
+<main class="hv-screen sp" id="root-compra"></main>
+<main class="hv-screen tk" id="root-tareas" style="display:none"></main>
+<script src="/marco-casa/frame/hv/config.js"></script>
+<script src="/marco-casa/frame/shared/datos.js?v=4"></script>
+<script src="/marco-casa/frame/shared/cond.js"></script>
+<script src="/marco-casa/frame/hv/hv.js?v=13"></script>
+<script src="/marco-casa/frame/hv/faces/sched.js?v=3"></script>
+<script>window.HV_NO_CHROME=true;window.HV_ROOT_ID='root-compra';</script>
+<script src="/marco-casa/frame/hv/shopping/shopping.js?v=12"></script>
+<script>window.HV_ROOT_ID='root-tareas';window.HV_NO_CHROME=true;</script>
+<script src="/marco-casa/frame/hv/tasks/tasks.js?v=2"></script>
+<script>
+(function(){
+  HV.chrome({light:true});HV.back('Inicio');
+  var seg=document.getElementById('seg'),rc=document.getElementById('root-compra'),rt=document.getElementById('root-tareas');
+  function go(t){
+    [].forEach.call(seg.querySelectorAll('button'),function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});
+    rc.style.display=t==='compra'?'':'none';rt.style.display=t==='tareas'?'':'none';
+    try{history.replaceState(null,'','?t='+t);}catch(e){}
+  }
+  seg.onclick=function(e){var b=e.target.closest('[data-t]');if(b)go(b.getAttribute('data-t'));};
+  go(/[?&]t=tareas/.test(location.search)?'tareas':'compra');
+})();
+</script>
+</body></html>

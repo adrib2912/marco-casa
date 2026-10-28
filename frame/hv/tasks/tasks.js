@@ -3,7 +3,7 @@
    Escribe: POST /api/tasks {add, who} | {toggle:id} | {remove:id} | {clear_done:true}
    A la derecha, una tarjeta por persona (config.json "people") que filtra la lista al tocarla. */
 (function(){
-  var root=document.getElementById('root'),esc=HV.esc,D=null,busy=false,who='',filter=null;
+  var root=document.getElementById(window.HV_ROOT_ID||'root'),esc=HV.esc,D=null,busy=false,who='',filter=null;
   var PEOPLE=HV.cfg.people||[];
   var CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
   var RM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -47,12 +47,12 @@
   function send(obj,ok){busy=true;return HV.post('/api/tasks',obj).then(function(r){D=r;if(ok)HV.toast(ok);},function(err){HV.toast(err.message);}).then(function(){busy=false;draw();});}
 
   root.onsubmit=function(e){
-    e.preventDefault();var i=document.getElementById('ai'),v=i?i.value.replace(/^\s+|\s+$/g,''):'';if(!v||busy)return;
+    e.preventDefault();var i=root.querySelector('#ai'),v=i?i.value.replace(/^\s+|\s+$/g,''):'';if(!v||busy)return;
     send({add:v,who:who},'Añadida: '+v);
   };
   root.onclick=function(e){
     var b;
-    if((b=e.target.closest('[data-w]'))){who=b.getAttribute('data-w');var v=(document.getElementById('ai')||{}).value||'';draw();var i=document.getElementById('ai');if(i)i.value=v;return;}
+    if((b=e.target.closest('[data-w]'))){who=b.getAttribute('data-w');var v=(root.querySelector('#ai')||{}).value||'';draw();var i=root.querySelector('#ai');if(i)i.value=v;return;}
     if((b=e.target.closest('[data-f]'))){var f=b.getAttribute('data-f');filter=f==='*'||filter===f?null:f;draw();return;}
     if(busy)return;
     if((b=e.target.closest('[data-rm]'))){send({remove:b.getAttribute('data-rm')});return;}
@@ -60,6 +60,6 @@
       D.items.forEach(function(x){if(x.id===id){x.done=!x.done;D.left+=x.done?-1:1;}});draw();send({toggle:id});return;}
     if(e.target.closest('#clr'))send({clear_done:true},'Borradas las hechas');
   };
-  HV.chrome({light:true});HV.back('Inicio');
-  draw();load();setInterval(function(){var a=document.activeElement;if(!busy&&!(a&&a.id==='ai'))load();},20000);
+  if(!window.HV_NO_CHROME){HV.chrome({light:true});HV.back('Inicio');}
+  draw();load();setInterval(function(){var a=document.activeElement;if(!busy&&!(a&&a.id==='ai'&&root.contains(a)))load();},20000);
 })();
