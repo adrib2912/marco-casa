@@ -17,7 +17,7 @@ window.HV_CONFIG={
   // las claves deben coincidir con las de .github/workflows/calendario.yml
   calendars:[{key:'familia',name:'Familia',color:'#ff9f0a',holidays:false},
              {key:'festivos',name:'Festivos',color:'#34c759',holidays:true},
-             {key:'atleti',name:'Atleti',color:'#e03a3e',holidays:false},
+             {key:'atleti',name:'Atleti',color:'#e03a3e',holidays:false},  // Fotmob team 9906
              {key:'barajas',name:'Barajas',color:'#0a84ff',holidays:false}],
   backpack:[],
   sonos:false, spotify:false, camera:false, ha:false, ha_alerts:false
