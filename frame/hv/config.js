@@ -16,7 +16,9 @@ window.HV_CONFIG={
   timers:[{label:'Pasta',seconds:600},{label:'Huevos',seconds:600},{label:'Arroz',seconds:1200},{label:'Horno',seconds:1800}],
   // las claves deben coincidir con las de .github/workflows/calendario.yml
   calendars:[{key:'familia',name:'Familia',color:'#ff9f0a',holidays:false},
-             {key:'festivos',name:'Festivos',color:'#34c759',holidays:true}],
+             {key:'festivos',name:'Festivos',color:'#34c759',holidays:true},
+             {key:'atleti',name:'Atleti',color:'#e03a3e',holidays:false},
+             {key:'barajas',name:'Barajas',color:'#0a84ff',holidays:false}],
   backpack:[],
   sonos:false, spotify:false, camera:false, ha:false, ha_alerts:false
 };
