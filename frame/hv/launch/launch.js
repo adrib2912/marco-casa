@@ -169,7 +169,9 @@
       h+='<div class="mo-c'+(o.mo!==mo?' out':'')+(n===today?' today':'')+(o.dow===0||o.dow===6?' wk':'')+'"><b>'+o.d+'</b><span class="mo-dots">'+dots+'</span></div>';
     }
     var MON=HV.MONTHS[mo-1];MON=MON.charAt(0).toUpperCase()+MON.slice(1);
-    return '<div class="w month s4" data-href="/marco-casa/frame/hv/calendar/"><div class="lbl">'+ic('cal')+MON+'</div>'+
+    // cabecera tipo hoja de calendario de pared: el mes como una cinta de color, no una etiqueta más
+    return '<div class="w month s4" data-href="/marco-casa/frame/hv/calendar/">'+
+      '<div class="mo-band"><b>'+MON+'</b>'+ic('cal')+'</div>'+
       '<div class="mo-wl"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>'+
       '<div class="mo-g" style="grid-template-rows:repeat('+rows+',minmax(0,1fr))">'+h+'</div></div>';
   }
