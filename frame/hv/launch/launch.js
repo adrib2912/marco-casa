@@ -1,8 +1,8 @@
 /* Home launcher (/marco-casa/frame/hv/): live widgets, each opens its full screen. Refreshes every 30 s (ETag'd).
    Layout, 4 x 3:
-     [ Today (2 wide)          ] [ Weather  ] [ Outside  ]   (Outside becomes Smart Home when Home Assistant is set up)
-     [ Tonight  ] [ Timer      ] [ Shopping ] [ Photos   ]   (Photos becomes Music when Sonos or Spotify is set up)
-     [ This week: tomorrow + 6 days, events and dinners   ]
+     [ Today (2 wide)                  ] [ Weather  ] [ Outside  ]   (Outside becomes Smart Home when Home Assistant is set up)
+     [ Compra + Tareas (2 wide)        ] [ Timer    ] [ Photos   ]   (Photos becomes Music when Sonos or Spotify is set up)
+     [ Month: the current month, a dot per calendar on days with plans (4 wide) ]
    Standby is the photo chip top right. Timer shows a big timer icon when none is running, else the countdown. ES5. */
 (function(){
   var d={frame:null,plan:null,shop:null,music:null,photos:null,ha:null};
@@ -123,13 +123,16 @@
     return '<div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+I.timer+'</svg></div>';   // idle: just a big timer icon
   }
 
-  function shopTile(){
-    var S=d.shop,left=S?S.left:null,body;
+  // Compra + Tareas en una sola tarjeta (2 columnas): la compra es lo que de verdad van a usar, así que
+  // lleva el peso; las tareas se quedan como una etiqueta aparte, con su propio enlace a su pestaña.
+  function listsTile(){
+    var S=d.shop,T=d.tasks,left=S?S.left:null,tleft=T?T.left:null,body;
     if(S&&left){var open=S.items.filter(function(x){return !x.checked;}),rows='';
       open.slice(0,3).forEach(function(x,i){rows+='<div>'+HV.esc(x.name)+(i===2&&left>3?' <span>+'+(left-3)+' más</span>':'')+'</div>';});
       body='<div class="cnt"><div class="big">'+left+'</div><div class="sub">por comprar</div></div><div class="items">'+rows+'</div>';}
     else body='<div><div class="big">'+(S?left:'—')+'</div><div class="line">'+(!S?'Cargando la lista':S.items.length?'Todo comprado':'Lista vacía')+'</div></div>';
-    return w(left?'on':'','/marco-casa/frame/hv/tareas/?t=compra','Compra','cart',body);
+    var chip=tleft?'<span class="tasks-chip" data-href="/marco-casa/frame/hv/tareas/?t=tareas">'+ic('check')+tleft+' tarea'+(tleft===1?'':'s')+'</span>':'';
+    return '<div class="w s2'+(left?' on':'')+'" data-href="/marco-casa/frame/hv/tareas/?t=compra"><div class="lbl">'+ic('cart')+'Compra'+chip+'</div>'+body+'</div>';
   }
 
   // Luz: el precio de ahora (barata, normal o cara respecto al día) y las dos horas seguidas más baratas que quedan
@@ -144,37 +147,31 @@
       (b?'<div class="line muted">Lo más barato: '+hh(b.from)+'–'+fin+(b.from.slice(0,10)!==L.today[0].t.slice(0,10)?' (mañana)':'')+'</div>':''));
   }
 
-  // Tareas: cuántas quedan y las tres primeras (con quién, si se ha dicho)
-  function tasksTile(){
-    var T=d.tasks,left=T?T.left:null,body;
-    if(T&&left){var open=T.items.filter(function(x){return !x.done;}),rows='';
-      open.slice(0,3).forEach(function(x,i){rows+='<div>'+HV.esc(x.title)+(x.who?' <span>· '+HV.esc(x.who)+'</span>':'')+(i===2&&left>3?' <span>+'+(left-3)+' más</span>':'')+'</div>';});
-      body='<div class="cnt"><div class="big">'+left+'</div><div class="sub">por hacer</div></div><div class="items">'+rows+'</div>';}
-    else body='<div><div class="big">'+(T?left:'—')+'</div><div class="line">'+(!T?'Cargando':T.items.length?'Todo hecho':'Nada pendiente')+'</div></div>';
-    return w('tasks'+(left?' on':''),'/marco-casa/frame/hv/tareas/?t=tareas','Tareas','check',body);
-  }
-
-  // This week: tomorrow and the 6 days after, each with up to 2 events, backpack stickers by the day name, and its dinner
-  function weekTile(){
-    var P=d.plan,meals=(P&&P.days)||{},evs=(d.frame&&d.frame.calendar_events)||[],now=HV.now().getTime(),h='',j;
-    for(j=1;j<=7;j++){
-      var k=key(HV.local(new Date(now+j*864e5))),dt=new Date(k+'T12:00:00'),dn=j===1?'Mañana':HV.DAYS[dt.getDay()].slice(0,3),meal=meals[k];
-      var on=evs.filter(function(e){var s=dayKey(e.start);if(!e.all_day)return s===k;
-          var en=e.end?dayKey(e.end):s;return s<=k&&(k<en||s===k);})
-        .sort(function(a,b){return (b.all_day?1:0)-(a.all_day?1:0)||new Date(a.start)-new Date(b.start);});
-      // backpack stickers next to the day name: what the backpack rules find in that day's calendar (up to 3)
-      var bp='',seen={};on.forEach(function(e){if(HV.isHoliday(e.cal))return;var r=HV.packHit(e.title);if(!r||seen[r.item]||bp.split('<i').length>3)return;seen[r.item]=1;
-        bp+='<i style="background:'+(HV.PACK_COLOR[r.icon]||'#8e8e93')+'">'+HV.packIcon(r.icon,'#fff')+'</i>';});
-      h+='<div class="d" data-href="/marco-casa/frame/hv/calendar/?open='+j+'"><div class="dn"><span>'+dn+'</span>'+(bp?'<span class="bp">'+bp+'</span>':'')+'<b>'+(+k.slice(8,10))+'</b></div>';
-      // room for 2 event lines above a dinner (3 without one); past that, the last line is "+N more"
-      var room=meal?2:3,show=on.length>room?room-1:on.length;
-      on.slice(0,show).forEach(function(e){h+='<div class="e"><i style="background:'+HV.calColor(e.cal)+'"></i><span>'+HV.esc(e.title)+'</span></div>';});
-      if(on.length>show)h+='<div class="free">+'+(on.length-show)+' más</div>';
-      if(!on.length)h+='<div class="free">Libre</div>';
-      if(meal)h+='<div class="ml set" data-href="/marco-casa/frame/hv/meals/">'+ic('fork')+'<span>'+HV.esc(meal.name)+'</span></div>';   // no "+ Dinner": keeps the strip short
-      h+='</div>';
+  // Mes: un calendario de pared en miniatura con el mes actual, un punto por calendario en los días con
+  // planes (hasta 3, como en la pantalla de Calendario). No es interactivo día a día aquí: cualquier toque
+  // abre la pantalla de Calendario completa, que ya tiene su propio mes navegable y el detalle de cada día.
+  function monthTile(){
+    var t=HV.local(),y=t.y,mo=t.mo;
+    function dnum(yy,mm,dd){return Math.round(Date.UTC(yy,mm-1,dd)/864e5);}
+    function fromNum(n){var dt=new Date(n*864e5);return {mo:dt.getUTCMonth()+1,d:dt.getUTCDate(),dow:dt.getUTCDay()};}
+    var first=dnum(y,mo,1),f=fromNum(first),off=(f.dow+6)%7,start=first-off;   // semanas de lunes a domingo
+    var dim=new Date(Date.UTC(y,mo,0)).getUTCDate(),rows=Math.ceil((off+dim)/7),today=dnum(y,mo,t.d);
+    var evs=(d.frame&&d.frame.calendar_events)||[],sp=[];
+    evs.forEach(function(e){var s=HV.local(new Date(e.start)),a=dnum(s.y,s.mo,s.d),b;
+      if(e.all_day&&e.end){var en=HV.local(new Date(e.end));b=dnum(en.y,en.mo,en.d)-1;}
+      else if(e.end){var en2=HV.local(new Date(new Date(e.end).getTime()-1000));b=dnum(en2.y,en2.mo,en2.d);}
+      else b=a;
+      if(b<a)b=a;sp.push({cal:e.cal,a:a,b:b});});
+    var h='',i,j;
+    for(i=0;i<rows*7;i++){
+      var n=start+i,o=fromNum(n),dots='',c=0,seen={};
+      for(j=0;j<sp.length&&c<3;j++){var e2=sp[j];if(e2.a<=n&&e2.b>=n&&!seen[e2.cal]){seen[e2.cal]=1;dots+='<i style="background:'+HV.calColor(e2.cal)+'"></i>';c++;}}
+      h+='<div class="mo-c'+(o.mo!==mo?' out':'')+(n===today?' today':'')+(o.dow===0||o.dow===6?' wk':'')+'"><b>'+o.d+'</b><span class="mo-dots">'+dots+'</span></div>';
     }
-    return '<div class="w week s4"><div class="wk">'+h+'</div></div>';   // no title: the day cells say it all
+    var MON=HV.MONTHS[mo-1];MON=MON.charAt(0).toUpperCase()+MON.slice(1);
+    return '<div class="w month s4" data-href="/marco-casa/frame/hv/calendar/"><div class="lbl">'+ic('cal')+MON+'</div>'+
+      '<div class="mo-wl"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>'+
+      '<div class="mo-g" style="grid-template-rows:repeat('+rows+',minmax(0,1fr))">'+h+'</div></div>';
   }
 
   function render(){
@@ -183,9 +180,8 @@
     document.getElementById('hello').textContent=h<6?'Buenas noches':h<14?'Buenos días':h<21?'Buenas tardes':'Buenas noches';
     drawDate();
     var html=todayTile()+weatherTile(wx)+luzTile();
-    html+=tasksTile();
+    html+=listsTile();
     html+=w('timer',null,'Temporizador','timer','<div class="tb">'+timerBody()+'</div>');
-    html+=shopTile();
     if(MUSIC){
       var rooms=(d.music&&d.music.rooms)||[],pl=null;rooms.forEach(function(r){if(!pl&&r.ok&&r.state==='PLAYING'&&r.title)pl=r;});
       html+=w('music','/marco-casa/frame/hv/music/','Music','note',pl?'<div><div class="line" style="font-size:3.2vh">'+HV.esc(pl.title)+'</div><div class="line" style="color:rgba(255,255,255,.7)">'+HV.esc(pl.artist||pl.name)+'</div></div>':
@@ -195,10 +191,10 @@
       var p0u=p0?p0.url+(p0.url.indexOf('?')<0?'?':'&')+'w=480':'';
       html+=w('photos','/marco-casa/frame/hv/photos/','Fotos','photo','<div class="line">'+(d.photos?ps.length+' foto'+(ps.length===1?'':'s'):'Cargando fotos')+'</div>',p0?'background-image:url(\''+p0u+'\')':'');
     }
-    html+=weekTile();
+    html+=monthTile();
     grid.innerHTML=html;
   }
-  // taps on div tiles (timer, week strip) follow the nearest data-href
+  // taps on div tiles (timer, month grid, the Compra+Tareas card) follow the nearest data-href
   grid.onclick=function(e){
     var el=e.target;while(el&&el!==grid&&!el.getAttribute('data-href'))el=el.parentNode;
     if(el&&el!==grid)location.href=el.getAttribute('data-href');
