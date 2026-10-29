@@ -763,8 +763,19 @@ window.HVStandby={
       if(!PIN){hist.push({name:name,ph:d.ph||null,st:{b:blockKey,f:faceIx,r:runLeft,n:slideN}});if(hist.length>HIST)hist.shift();}}
     stage.appendChild(d);
     var old=cur;cur=d;
-    void d.offsetWidth; d.classList.add('on');
-    if(old){old.classList.remove('on');setTimeout(function(){if(old.parentNode)old.parentNode.removeChild(old);},1400);}
+    // wait for this slide's images (if any) to actually be ready before fading in, so the photo doesn't
+    // pop in mid-transition on a slow connection or the frame's weak WebView; a safety timeout caps the wait.
+    function reveal(){
+      void d.offsetWidth; d.classList.add('on');
+      if(old){old.classList.remove('on');setTimeout(function(){if(old.parentNode)old.parentNode.removeChild(old);},1400);}
+    }
+    var imgs=d.querySelectorAll?d.querySelectorAll('img'):[];
+    if(imgs.length){
+      var left=imgs.length,done=false;
+      function one(){if(done)return;if(--left<=0){done=true;reveal();}}
+      [].forEach.call(imgs,function(im){if(im.complete)one();else{im.addEventListener('load',one);im.addEventListener('error',one);}});
+      setTimeout(function(){if(!done){done=true;reveal();}},1800);
+    }else reveal();
     clearTimeout(timer);
     if(!PIN)timer=setTimeout(show,/photo|depth|plain/.test(d.className)?IDLE.slide*1000:IDLE.face*1000);
   }
