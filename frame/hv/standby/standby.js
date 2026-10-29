@@ -46,10 +46,15 @@ window.HVStandby={
   var faceIx=0, slideN=0, cur=null, timer=null, order={deck:[],last:null};
   var W=Math.min(1920,Math.round(innerWidth*(devicePixelRatio||1)));
 
-  function load(){
+  /* The first slide only needs the photo list; calendar, tasks, luz, alerts, music and the shopping
+     board only feed the small avisos overlay (or the other, less-frequent faces), so they load in the
+     background instead of holding up the first photo on a slow connection. */
+  function loadPhotos(){
+    return HVJson('/api/frame/photos').then(function(d){data.photos=(d.photos||[]).filter(function(p){return p.kind!=='video';});},function(){});
+  }
+  function loadRest(){
     return Promise.all([
       HVJson('/api/frame').then(function(d){data.frame=d;},function(){}),
-      HVJson('/api/frame/photos').then(function(d){data.photos=(d.photos||[]).filter(function(p){return p.kind!=='video';});},function(){}),
       HV.cfg.sonos?HVJson('/api/frame/music').then(function(d){data.music=d;},function(){}):null,
       HVJson('/api/tasks').then(function(d){if(d&&d.ok!==false)data.tasks=d;},function(){}),
       HV.cfg.ha_alerts?HVJson('/api/ha/alerts').then(function(d){data.alerts=(d&&d.alerts)||[];},function(){}):null,
@@ -58,6 +63,7 @@ window.HVStandby={
       HVJson('/api/luz').then(function(d){if(d&&d.ok!==false)data.luz=d;},function(){})
     ]);
   }
+  function load(){return Promise.all([loadPhotos(),loadRest()]);}   // the periodic refresh (below) still wants everything together
   function playing(){
     var rooms=(data.music&&data.music.rooms)||[];
     for(var i=0;i<rooms.length;i++){var r=rooms[i];   // TV sound on the Arc and line-in are not "now playing"
@@ -821,5 +827,6 @@ window.HVStandby={
     setTimeout(function(){hint.classList.add('on');},400);setTimeout(function(){hint.classList.remove('on');},8000);
     HV.chrome({clock:false,standby:false});
   }
-  load().then(show);
+  loadPhotos().then(show);   // first photo as soon as it's ready; don't wait on calendar/tasks/luz/alerts/music/shopping too
+  loadRest();
 })();
