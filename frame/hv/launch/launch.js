@@ -1,8 +1,8 @@
 /* Home launcher (/marco-casa/frame/hv/): live widgets, each opens its full screen. Refreshes every 30 s (ETag'd).
    Layout, 4 x 3:
-     [ Today (2 wide)                  ] [ Weather  ] [ Outside  ]   (Outside becomes Smart Home when Home Assistant is set up)
-     [ Compra + Tareas (2 wide)        ] [ Timer    ] [ Photos   ]   (Photos becomes Music when Sonos or Spotify is set up)
-     [ Month: the current month, a dot per calendar on days with plans (4 wide) ]
+     [ Weather (2 wide)         ] [ Luz (2 wide)       ]
+     [ Compra + Tareas (2 wide) ] [ Timer  ] [ Photos  ]   (Photos becomes Music when Sonos or Spotify is set up)
+     [ Today/Tomorrow's agenda + the current month, side by side (4 wide) ]
    Standby is the photo chip top right. Timer shows a big timer icon when none is running, else the countdown. ES5. */
 (function(){
   var d={frame:null,plan:null,shop:null,music:null,photos:null,ha:null};
@@ -39,56 +39,14 @@
       '<div class="lbl">'+ic(icon)+label+'</div>'+body+(href?'</a>':'</div>');
   }
 
-  // Today: what is still ahead today (up to 3, the next one gets a badge, "+N more" top right for the rest).
-  // Once today is done the card becomes Tomorrow: its weather, sunrise and the first thing on the calendar.
-  function todayTile(){
-    var tk=key(HV.local()),now=HV.now().getTime(),dim='style="color:rgba(235,235,245,.6)"';
-    if(!(HV.cfg.calendars||[]).length)return w('today s2','/marco-casa/frame/hv/calendar/','Hoy','cal','<div class="line" '+dim+'>Aún no hay calendario</div>');
-    var up=((d.frame&&d.frame.calendar_events)||[]).filter(function(e){return new Date(e.end||e.start).getTime()>now&&new Date(e.start).getTime()<now+14*864e5;})
-      .sort(function(a,b){return new Date(a.start)-new Date(b.start);});
-    function today(e){var s=dayKey(e.start);if(!e.all_day)return s===tk;var en=e.end?dayKey(e.end):s;return s<=tk&&(tk<en||s===tk);}
-    var tod=up.filter(today),later=!tod.length;
-    if(later)return tomorrowTile();
-    var list=tod,rows='',next=null;
-    list.slice(0,3).forEach(function(e){
-      var s=new Date(e.start).getTime(),m=Math.round((s-now)/60000),t=e.all_day?'Todo el día':HV.hm(new Date(s));
-      var em='<em>'+t+'</em>';
-      if(!e.all_day&&s<=now)em='<em class="soon">Ahora</em>';
-      else if(!e.all_day&&!next&&m<=60){next=e;em='<em class="soon">'+t+' · en '+Math.max(1,m)+' min</em>';}
-      rows+='<div class="ev"><i style="background:'+HV.calColor(e.cal)+'"></i><span>'+HV.esc(e.title)+'</span>'+em+'</div>';
-    });
-    var left=tod.length-3;
-    return w('today s2','/marco-casa/frame/hv/calendar/?open=0','Hoy'+(left>0?'<span class="more">+'+left+' más</span>':''),'cal','<div class="evs">'+rows+'</div>');
-  }
-
-  function tomorrowTile(){
-    var t=HV.local(new Date(HV.now().getTime()+864e5)),k=key(t),wx=d.frame&&d.frame.weather,day=null,evs=[];
-    ((wx&&wx.days)||[]).forEach(function(x){if(x.date===k)day=x;});
-    ((d.frame&&d.frame.calendar_events)||[]).forEach(function(e){var s=dayKey(e.start),en=e.end?dayKey(e.end):s;
-      if(e.all_day?(s<=k&&(k<en||s===k)):s===k)evs.push(e);});
-    evs.sort(function(a,b){return a.all_day!==b.all_day?(a.all_day?-1:1):new Date(a.start)-new Date(b.start);});
-    function row(icon,txt){return '<div class="tr i-'+icon+'">'+ic(icon)+'<span>'+txt+'</span></div>';}
-    // left: the day's weather in words (no temperature: the Weather card has it); right: tomorrow's calendar
-    var sky=day&&kind(day.code),wxs=day?(sky&&!/Lluvia|Llovizna/.test(sky)?row('sun',sky):'')+row('drop',day.precip_pct+'% lluvia'):row('drop',d.frame?'Sin previsión para mañana':'Cargando el tiempo');
-    if(wx&&wx.next_sunrise)wxs+=row('sunrise','Amanece '+hm24(wx.next_sunrise));
-    var cal='';
-    evs.slice(0,3).forEach(function(e){
-      cal+='<div class="ev"><i style="background:'+HV.calColor(e.cal)+'"></i>'+(e.all_day?'':'<em>'+HV.hm(new Date(e.start))+'</em>')+'<span>'+HV.esc(e.title)+'</span></div>';
-    });
-    if(!cal)cal='<div class="none">'+ic('cal')+'<span>Nada en el calendario</span></div>';
-    var left=evs.length-3;
-    return w('tmr s2','/marco-casa/frame/hv/calendar/?open=1','Mañana · '+HV.DAYS[t.dow]+(left>0?'<span class="more">+'+left+' más</span>':''),'sun',
-      '<div class="tcols"><div class="tds">'+wxs+'</div><div class="tcal">'+cal+'</div></div>');   // same dark card as Today
-  }
-
   function weatherTile(wx){
-    if(!wx||wx.temp_f==null)return w('wx','/marco-casa/frame/hv/weather/','Tiempo','sun','<div class="line">'+(d.frame?'No se ha podido cargar el tiempo':'Cargando el tiempo')+'</div>');
+    if(!wx||wx.temp_f==null)return w('wx s2','/marco-casa/frame/hv/weather/','Tiempo','sun','<div class="line">'+(d.frame?'No se ha podido cargar el tiempo':'Cargando el tiempo')+'</div>');
     var wc=!wx.is_day?' night':(wx.code>=3?' cloud':''),t=HV.local(),nk=key(t)+'T'+HV.pad(t.h);
-    var hrs=(wx.hours24||wx.hourly||[]).filter(function(x){return x.t.slice(0,13)>nk;}).slice(0,4);
+    var hrs=(wx.hours24||wx.hourly||[]).filter(function(x){return x.t.slice(0,13)>nk;}).slice(0,6);
     // rain timing is the Rain chip's job (top right, from the minute-by-minute nowcast)
     var say=kind(wx.code),hl='Máx '+Math.round(Math.max(wx.hi_f,wx.temp_f))+'° Mín '+Math.round(Math.min(wx.lo_f,wx.temp_f))+'°';
-    var strip='';hrs.slice(0,4).forEach(function(x){strip+='<div>'+hr(x.t)+'<b>'+Math.round(x.temp_f)+'°</b></div>';});
-    return w('wx'+wc,'/marco-casa/frame/hv/weather/','Tiempo','sun','<div><div class="tl"><div class="big">'+Math.round(wx.temp_f)+'°</div><div class="hl">'+hl+'</div></div><div class="say">'+say+'</div></div>'+(strip?'<div class="hrs">'+strip+'</div>':''));
+    var strip='';hrs.forEach(function(x){strip+='<div>'+hr(x.t)+'<b>'+Math.round(x.temp_f)+'°</b></div>';});
+    return w('wx s2'+wc,'/marco-casa/frame/hv/weather/','Tiempo','sun','<div><div class="tl"><div class="big">'+Math.round(wx.temp_f)+'°</div><div class="hl">'+hl+'</div></div><div class="say">'+say+'</div></div>'+(strip?'<div class="hrs">'+strip+'</div>':''));
   }
 
   // Home Assistant: the indoor temperature and humidity from its sensors; otherwise Outside: air quality and sunrise or sunset
@@ -140,40 +98,71 @@
   function hh(t){return (+t.slice(11,13))+':00';}
   function luzTile(){
     var L=d.luz,n=L&&L.now,b=L&&L.best2,word={barata:'Barata ahora',normal:'Precio normal',cara:'Cara ahora'};
-    if(!n)return w('luz','/marco-casa/frame/hv/luz/','Luz','bolt','<div class="line">'+(L?'Sin precios todavía':'Cargando')+'</div>');
+    if(!n)return w('luz s2','/marco-casa/frame/hv/luz/','Luz','bolt','<div class="line">'+(L?'Sin precios todavía':'Cargando')+'</div>');
     var fin=b?(+b.to.slice(11,13)+1)%24+':00':'';
-    return w('luz l-'+n.band,'/marco-casa/frame/hv/luz/','Luz','bolt',
+    return w('luz s2 l-'+n.band,'/marco-casa/frame/hv/luz/','Luz','bolt',
       '<div><div class="big">'+eur(n.p).replace(' €','<small> €/kWh</small>')+'</div><div class="lz-b">'+word[n.band]+'</div></div>'+
       (b?'<div class="line muted">Lo más barato: '+hh(b.from)+'–'+fin+(b.from.slice(0,10)!==L.today[0].t.slice(0,10)?' (mañana)':'')+'</div>':''));
   }
 
-  // Mes: un calendario de pared en miniatura con el mes actual, un punto por calendario en los días con
-  // planes (hasta 3, como en la pantalla de Calendario). No es interactivo día a día aquí: cualquier toque
-  // abre la pantalla de Calendario completa, que ya tiene su propio mes navegable y el detalle de cada día.
-  function monthTile(){
-    var t=HV.local(),y=t.y,mo=t.mo;
+  // Hoy + Mes en un solo widget, a la Adri: a la izquierda la agenda de hoy (o de mañana, una vez
+  // terminada la de hoy, con su tiempo en palabras); a la derecha el mes completo con un punto de color
+  // por calendario en los días con planes. Cualquier toque abre la agenda de hoy en el Calendario completo.
+  function agendaMonthTile(){
+    var t=HV.local(),tk=key(t),now=HV.now().getTime(),left;
+    if(!(HV.cfg.calendars||[]).length){
+      left='<div class="am-daynum">'+t.d+'</div><div class="am-dayname">'+HV.DAYS[t.dow]+'</div><div class="am-events"><div class="am-none">Aún no hay calendario</div></div>';
+    }else{
+      var up=((d.frame&&d.frame.calendar_events)||[]).filter(function(e){return new Date(e.end||e.start).getTime()>now&&new Date(e.start).getTime()<now+14*864e5;})
+        .sort(function(a,b){return new Date(a.start)-new Date(b.start);});
+      function isToday(e){var s=dayKey(e.start);if(!e.all_day)return s===tk;var en=e.end?dayKey(e.end):s;return s<=tk&&(tk<en||s===tk);}
+      var tod=up.filter(isToday);
+      if(tod.length){
+        var rows='';
+        tod.slice(0,3).forEach(function(e){
+          var s=new Date(e.start).getTime(),m=Math.round((s-now)/60000),tt=e.all_day?'Todo el día':HV.hm(new Date(s));
+          var em='<em'+(!e.all_day&&m<=60?' class="soon"':'')+'>'+(!e.all_day&&s<=now?'Ahora':tt)+'</em>';
+          rows+='<div class="ev"><i style="background:'+HV.calColor(e.cal)+'"></i><div><span>'+HV.esc(e.title)+'</span>'+em+'</div></div>';
+        });
+        var more=tod.length-3;
+        left='<div class="am-daynum">'+t.d+'</div><div class="am-dayname">'+HV.DAYS[t.dow]+(more>0?'<span class="more">+'+more+'</span>':'')+'</div><div class="am-events">'+rows+'</div>';
+      }else{
+        var tm=HV.local(new Date(now+864e5)),tmk=key(tm),evs=[];
+        ((d.frame&&d.frame.calendar_events)||[]).forEach(function(e){var s=dayKey(e.start),en=e.end?dayKey(e.end):s;
+          if(e.all_day?(s<=tmk&&(tmk<en||s===tmk)):s===tmk)evs.push(e);});
+        evs.sort(function(a,b){return a.all_day!==b.all_day?(a.all_day?-1:1):new Date(a.start)-new Date(b.start);});
+        var rows2='';evs.slice(0,3).forEach(function(e){
+          rows2+='<div class="ev"><i style="background:'+HV.calColor(e.cal)+'"></i><div><span>'+HV.esc(e.title)+'</span>'+(e.all_day?'':'<em>'+HV.hm(new Date(e.start))+'</em>')+'</div></div>';
+        });
+        if(!rows2)rows2='<div class="am-none">Nada previsto</div>';
+        var more2=evs.length-3;
+        left='<div class="am-daynum">'+tm.d+'</div><div class="am-dayname">Mañana'+(more2>0?'<span class="more">+'+more2+'</span>':'')+'</div><div class="am-events">'+rows2+'</div>';
+      }
+    }
+    // el mes: igual que antes, sin la cinta de color (aquí el propio widget ya lleva su etiqueta)
+    var y=t.y,mo=t.mo;
     function dnum(yy,mm,dd){return Math.round(Date.UTC(yy,mm-1,dd)/864e5);}
     function fromNum(n){var dt=new Date(n*864e5);return {mo:dt.getUTCMonth()+1,d:dt.getUTCDate(),dow:dt.getUTCDay()};}
     var first=dnum(y,mo,1),f=fromNum(first),off=(f.dow+6)%7,start=first-off;   // semanas de lunes a domingo
-    var dim=new Date(Date.UTC(y,mo,0)).getUTCDate(),rows=Math.ceil((off+dim)/7),today=dnum(y,mo,t.d);
-    var evs=(d.frame&&d.frame.calendar_events)||[],sp=[];
-    evs.forEach(function(e){var s=HV.local(new Date(e.start)),a=dnum(s.y,s.mo,s.d),b;
+    var dim=new Date(Date.UTC(y,mo,0)).getUTCDate(),rows3=Math.ceil((off+dim)/7),today=dnum(y,mo,t.d);
+    var evs3=(d.frame&&d.frame.calendar_events)||[],sp=[];
+    evs3.forEach(function(e){var s=HV.local(new Date(e.start)),a=dnum(s.y,s.mo,s.d),b;
       if(e.all_day&&e.end){var en=HV.local(new Date(e.end));b=dnum(en.y,en.mo,en.d)-1;}
       else if(e.end){var en2=HV.local(new Date(new Date(e.end).getTime()-1000));b=dnum(en2.y,en2.mo,en2.d);}
       else b=a;
       if(b<a)b=a;sp.push({cal:e.cal,a:a,b:b});});
-    var h='',i,j;
-    for(i=0;i<rows*7;i++){
+    var gh='',i,j;
+    for(i=0;i<rows3*7;i++){
       var n=start+i,o=fromNum(n),dots='',c=0,seen={};
       for(j=0;j<sp.length&&c<3;j++){var e2=sp[j];if(e2.a<=n&&e2.b>=n&&!seen[e2.cal]){seen[e2.cal]=1;dots+='<i style="background:'+HV.calColor(e2.cal)+'"></i>';c++;}}
-      h+='<div class="mo-c'+(o.mo!==mo?' out':'')+(n===today?' today':'')+(o.dow===0||o.dow===6?' wk':'')+'"><b>'+o.d+'</b><span class="mo-dots">'+dots+'</span></div>';
+      gh+='<div class="mo-c'+(o.mo!==mo?' out':'')+(n===today?' today':'')+(o.dow===0||o.dow===6?' wk':'')+'"><b>'+o.d+'</b><span class="mo-dots">'+dots+'</span></div>';
     }
     var MON=HV.MONTHS[mo-1];MON=MON.charAt(0).toUpperCase()+MON.slice(1);
-    // cabecera tipo hoja de calendario de pared: el mes como una cinta de color, no una etiqueta más
-    return '<div class="w month s4" data-href="/marco-casa/frame/hv/calendar/">'+
-      '<div class="mo-band"><b>'+MON+'</b>'+ic('cal')+'</div>'+
+    return '<div class="w agenda-month s4" data-href="/marco-casa/frame/hv/calendar/?open=0">'+
+      '<div class="am-l">'+left+'</div>'+
+      '<div class="am-r"><div class="am-mlabel">'+MON+'</div>'+
       '<div class="mo-wl"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>'+
-      '<div class="mo-g" style="grid-template-rows:repeat('+rows+',minmax(0,1fr))">'+h+'</div></div>';
+      '<div class="mo-g" style="grid-template-rows:repeat('+rows3+',minmax(0,1fr))">'+gh+'</div></div></div>';
   }
 
   function render(){
@@ -181,7 +170,7 @@
     HV.rainChip(wx&&wx.nowcast);                    // rain soon, left of the camera button
     document.getElementById('hello').textContent=h<6?'Buenas noches':h<14?'Buenos días':h<21?'Buenas tardes':'Buenas noches';
     drawDate();
-    var html=todayTile()+weatherTile(wx)+luzTile();
+    var html=weatherTile(wx)+luzTile();
     html+=listsTile();
     html+=w('timer',null,'Temporizador','timer','<div class="tb">'+timerBody()+'</div>');
     if(MUSIC){
@@ -193,7 +182,7 @@
       var p0u=p0?p0.url+(p0.url.indexOf('?')<0?'?':'&')+'w=480':'';
       html+=w('photos','/marco-casa/frame/hv/photos/','Fotos','photo','<div class="line">'+(d.photos?ps.length+' foto'+(ps.length===1?'':'s'):'Cargando fotos')+'</div>',p0?'background-image:url(\''+p0u+'\')':'');
     }
-    html+=monthTile();
+    html+=agendaMonthTile();
     grid.innerHTML=html;
   }
   // taps on div tiles (timer, month grid, the Compra+Tareas card) follow the nearest data-href
