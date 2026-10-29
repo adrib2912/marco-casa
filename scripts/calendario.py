@@ -43,6 +43,26 @@ def limpiar(texto, n=300):
     return (t[:n].rstrip() + "…") if len(t) > n else (t or None)
 
 
+# officeholidays.com da los nombres de los festivos en inglés: se traducen los fijos
+# (los que se repiten cada año) para que el marco los muestre en castellano.
+FESTIVOS_ES = [
+    ("New Year's Day", "Año Nuevo"), ("Epiphany", "Epifanía del Señor"),
+    ("Maundy Thursday", "Jueves Santo"), ("Good Friday", "Viernes Santo"),
+    ("Labour Day", "Día del Trabajo"), ("Labor Day", "Día del Trabajo"),
+    ("Assumption of Mary", "Asunción de la Virgen"), ("Assumption Day", "Asunción de la Virgen"),
+    ("National Day", "Fiesta Nacional de España"), ("Hispanic Day", "Fiesta Nacional de España"),
+    ("All Saints' Day", "Día de Todos los Santos"), ("Constitution Day", "Día de la Constitución"),
+    ("Immaculate Conception", "Inmaculada Concepción"), ("Christmas Day", "Navidad"),
+    ("(Regional Holiday)", "(festivo regional)"), ("(in lieu)", "(trasladado)"),
+]
+
+
+def traducir_festivo(titulo):
+    for en, es in FESTIVOS_ES:
+        titulo = titulo.replace(en, es)
+    return titulo
+
+
 def eventos(ics, key, desde, hasta):
     out = []
     for ev in recurring_ical_events.of(icalendar.Calendar.from_ical(ics)).between(desde, hasta):
@@ -55,7 +75,10 @@ def eventos(ics, key, desde, hasta):
             fin = ini + ev["DURATION"].dt
         else:
             fin = ini + (timedelta(days=1) if todo else timedelta(0))
-        out.append({"uid": str(ev.get("UID", "")), "title": str(ev.get("SUMMARY", "")).strip() or "(ocupado)",
+        titulo = str(ev.get("SUMMARY", "")).strip() or "(ocupado)"
+        if key == "festivos":
+            titulo = traducir_festivo(titulo)
+        out.append({"uid": str(ev.get("UID", "")), "title": titulo,
                     "start": ini.isoformat(), "end": fin.isoformat(), "all_day": todo,
                     "location": str(ev.get("LOCATION", "")).strip() or None,
                     "description": limpiar(str(ev.get("DESCRIPTION", ""))), "cal": key})
