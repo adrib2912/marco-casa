@@ -102,14 +102,29 @@ window.HVStandby={
   }
   /* a portrait photo on a landscape frame: cover would show only about half of it */
   function tall(p){return innerWidth>innerHeight&&p.w&&p.h&&p.w/p.h<.95;}
-  /* the next tall photo still in this round's deck, taken out of it; for 'pair', any other tall photo when the deck has none */
+  /* y-m-d of a photo's timestamp, for same-day pairing below */
+  function dayOf(p){if(!p.t)return null;var d=HV.local(new Date(p.t*1000));return d.y+'-'+d.mo+'-'+d.d;}
+  /* the best tall photo to pair with p: same day wins outright; otherwise closest in time, so two
+     unrelated portraits from different trips don't end up side by side looking like one moment.
+     Still prefers the current round's deck (taken out of it) so every photo gets its turn; for
+     'pair', falls back to any other tall photo in the library when the deck has none left. */
   function partner(p){
     var byId={};data.photos.forEach(function(x){byId[x.id]=x;});
     if(PIN_PHOTO&&!order.deck.length)order.deck=HVStandby.shuffle(data.photos.map(function(x){return x.id;}),Math.random);   // ?photo= preview: a partner too
-    for(var i=order.deck.length-1;i>=0;i--){var q=byId[order.deck[i]];if(q&&q.id!==p.id&&tall(q)){order.deck.splice(i,1);return q;}}
+    var pDay=dayOf(p),best=-1,bestDiff=Infinity;
+    for(var i=order.deck.length-1;i>=0;i--){
+      var q=byId[order.deck[i]];if(!q||q.id===p.id||!tall(q))continue;
+      if(pDay&&dayOf(q)===pDay){best=i;break;}
+      var diff=Math.abs((q.t||0)-(p.t||0));
+      if(diff<bestDiff){bestDiff=diff;best=i;}
+    }
+    if(best>=0){var r=byId[order.deck[best]];order.deck.splice(best,1);return r;}
     if(IDLE.tall!=='pair')return null;
     var t=data.photos.filter(function(x){return x.id!==p.id&&tall(x);});
-    return t.length?t[Math.floor(Math.random()*t.length)]:null;
+    if(!t.length)return null;
+    if(pDay){var same=t.filter(function(x){return dayOf(x)===pDay;});if(same.length)return same[Math.floor(Math.random()*same.length)];}
+    t.sort(function(a,b){return Math.abs((a.t||0)-(p.t||0))-Math.abs((b.t||0)-(p.t||0));});
+    return t[0];
   }
 
   /* ---------- faces ---------- */
